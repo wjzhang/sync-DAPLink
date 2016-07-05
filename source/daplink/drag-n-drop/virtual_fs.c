@@ -141,7 +141,7 @@ static const mbr_t mbr_tmpl = {
     /*uint8_t */.boot_record_signature      = 0x29,         // signature is present
     /*uint32_t*/.volume_id                  = 0x27021974,   // serial number
     // needs to match the root dir label
-    /*char[11]*/.volume_label               = {'D', 'A', 'P', 'L', 'I', 'N', 'K', '-', 'D', 'N', 'D'},
+    /*char[11]*/.volume_label               = {'M', 'E', 'S', 'H', '-', 'D', 'B', 'G', ' ', ' ', ' '},
     // unused by msft - just a label (FAT, FAT12, FAT16)
     /*char[8] */.file_system_type           = {'F', 'A', 'T', '1', '2', ' ', ' ', ' '},
 
