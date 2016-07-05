@@ -39,6 +39,8 @@
 #include "file_stream.h"
 #include "error.h"
 
+#include "target_config.h"
+
 // Set to 1 to enable debugging
 #define DEBUG_VFS_MANAGER     0
 
@@ -307,8 +309,6 @@ void usbd_msc_read_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
         return;
     }
 
-    // indicate msc activity
-    main_blink_msc_led(MAIN_LED_OFF);
     vfs_read(sector, buf, num_of_sectors);
 }
 
@@ -329,8 +329,8 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
         return;
     }
 
-    // indicate msc activity
-    main_blink_msc_led(MAIN_LED_OFF);
+    // indicate DAP activity
+    main_blink_hid_led(MAIN_LED_OFF);
     vfs_write(sector, buf, num_of_sectors);
     file_data_handler(sector, buf, num_of_sectors);
 }
@@ -421,7 +421,7 @@ static void file_data_handler(uint32_t sector, const uint8_t *buf, uint32_t num_
 
     // this is the key for starting a file write - we dont care what file types are sent
     //  just look for something unique (NVIC table, hex, srec, etc) until root dir is updated
-    if (!file_transfer_state.stream_started) {
+    if (!file_transfer_state.stream_started) {        
         // look for file types we can program
         stream = stream_start_identify((uint8_t *)buf, VFS_SECTOR_SIZE * num_of_sectors);
 

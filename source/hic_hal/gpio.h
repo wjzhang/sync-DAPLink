@@ -27,6 +27,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+    
+enum
+{
+	PIN_CONFIG_DT01 = 0,
+	PIN_CONFIG_1    = 1,
+	PIN_CONFIG_2    = 2,
+	PIN_CONFIG_3    = 3,	
+};
+
+enum
+{
+	PIN_LOW  = 0,
+	PIN_HIGH = 1,
+};    
 
 // wiring on PCB is unknown so implementations may vary
 typedef enum led_state {
@@ -37,8 +51,9 @@ typedef enum led_state {
 void gpio_init(void);
 void gpio_set_hid_led(gpio_led_state_t state);
 void gpio_set_cdc_led(gpio_led_state_t state);
-void gpio_set_msc_led(gpio_led_state_t state);
 uint8_t gpio_get_sw_reset(void);
+
+uint8_t gpio_get_config(uint8_t cfgid);
 
 #ifdef __cplusplus
 }
