@@ -23,6 +23,8 @@
 #include "string.h"
 #include "target_config.h"
 
+#include "target_ids.h"
+
 static inline uint32_t test_range(const uint32_t test, const uint32_t min, const uint32_t max)
 {
     return ((test < min) || (test > max)) ? 0 : 1;
@@ -38,8 +40,11 @@ uint8_t validate_bin_nvic(const uint8_t *buf)
     uint32_t i = 4, nvic_val = 0;
     // test the initial SP value
     memcpy(&nvic_val, buf + 0, sizeof(nvic_val));
+    
+    if (targetID == Target_UNKNOWN)
+        return 0;
 
-    if (0 == test_range(nvic_val, target_device.ram_start, target_device.ram_end)) {
+    if (0 == test_range(nvic_val, target_device[targetID].ram_start, target_device[targetID].ram_end)) {
         return 0;
     }
 
@@ -49,7 +54,7 @@ uint8_t validate_bin_nvic(const uint8_t *buf)
     for (; i <= 12; i += 4) {
         memcpy(&nvic_val, buf + i, sizeof(nvic_val));
 
-        if (0 == test_range(nvic_val, target_device.flash_start, target_device.flash_end)) {
+        if (0 == test_range(nvic_val, target_device[targetID].flash_start, target_device[targetID].flash_end)) {
             return 0;
         }
     }

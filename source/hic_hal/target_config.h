@@ -53,9 +53,16 @@ typedef struct target_cfg {
     uint32_t ram_end;               /*!< Highest contigous RAM address the application uses */
     program_target_t *flash_algo;   /*!< A pointer to the flash algorithm structure */
     uint8_t erase_reset;            /*!< Reset after performing an erase */
+    
+    uint32_t (*get_sector_number)(uint32_t addr);  // convert flash address to sector number
+    uint32_t (*get_sector_address)(uint32_t sector);  //convert sector number to flash address
+    uint32_t (*get_sector_length)(uint32_t sector);  //get sector size. (some device has difference sector size)
+    
 } target_cfg_t;
 
-extern const target_cfg_t target_device;
+extern const target_cfg_t target_device[];
+extern uint8_t targetID;
+uint8_t swd_init_get_target(void);
 
 #ifdef __cplusplus
 }

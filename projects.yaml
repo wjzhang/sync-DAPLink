@@ -181,3 +181,7 @@ projects:
         - *module_if
         - *module_hic_lpc11u35
         - records/board/archlink.yaml
+    lpc11u35_multi_targets_if:
+        - *module_if
+        - *module_hic_lpc11u35
+        - records/board/mesh_multi_targets.yaml        
