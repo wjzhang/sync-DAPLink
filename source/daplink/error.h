@@ -77,7 +77,7 @@ typedef enum {
     ERROR_BL_UPDT_BAD_CRC,
 
     // Add new values here
-
+    ERROR_TARGET_UNKNOWN,
     ERROR_COUNT
 } error_t;
 
