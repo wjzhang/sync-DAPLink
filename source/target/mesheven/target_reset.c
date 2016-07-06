@@ -26,6 +26,7 @@ typedef struct{
     uint8_t (*setstate)(TARGET_RESET_STATE);
 }Target_Reset;
 
+uint8_t nrf51_target_set_state(TARGET_RESET_STATE state);
 
 void common_target_before_init_debug(void)
 {
@@ -49,7 +50,7 @@ uint8_t common_target_set_state(TARGET_RESET_STATE state)
 
 
 static const Target_Reset targets[] = {
-    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
+    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, nrf51_target_set_state     },
     {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
     {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
     {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
