@@ -461,8 +461,9 @@ void vfs_read(uint32_t requested_sector, uint8_t *buf, uint32_t num_sectors)
     }
 }
 
-void vfs_write(uint32_t requested_sector, const uint8_t *buf, uint32_t num_sectors)
+bool vfs_write(uint32_t requested_sector, const uint8_t *buf, uint32_t num_sectors)
 {
+    bool rc = false;
     uint8_t i = 0;
     uint32_t current_sector;
     current_sector = 0;
@@ -484,6 +485,7 @@ void vfs_write(uint32_t requested_sector, const uint8_t *buf, uint32_t num_secto
             // Update requested sector
             requested_sector += sectors_to_read;
             num_sectors -= sectors_to_read;
+            rc = true;
         }
 
         // If there is no more data to be read then break
@@ -494,6 +496,7 @@ void vfs_write(uint32_t requested_sector, const uint8_t *buf, uint32_t num_secto
         // Move to the next virtual media entry
         current_sector += vm_sectors;
     }
+    return rc;
 }
 
 static uint32_t read_zero(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors)

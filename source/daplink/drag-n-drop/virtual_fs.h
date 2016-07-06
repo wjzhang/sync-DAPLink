@@ -23,6 +23,7 @@
 #define VIRTUAL_FS_H
 
 #include "stdint.h"
+#include "stdbool.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -99,7 +100,7 @@ void vfs_set_file_change_callback(vfs_file_change_cb_t cb);
 void vfs_read(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors);
 
 // Write one or more sectors to the virtual filesystem
-void vfs_write(uint32_t sector, const uint8_t *buf, uint32_t num_of_sectors);
+bool vfs_write(uint32_t sector, const uint8_t *buf, uint32_t num_of_sectors);
 
 #ifdef __cplusplus
 }
