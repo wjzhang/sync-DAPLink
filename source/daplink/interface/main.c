@@ -242,6 +242,7 @@ __task void serial_process()
 extern __task void hid_process(void);
 __attribute__((weak)) void prerun_target_config(void) {}
 
+    
 __task void main_task(void)
 {
     // State processing
@@ -267,7 +268,7 @@ __task void main_task(void)
     gpio_set_hid_led(GPIO_LED_ON);
     gpio_set_cdc_led(GPIO_LED_ON);
     // Initialize the DAP
-    DAP_Setup();
+    swd_init();
     // do some init with the target before USB and files are configured
     prerun_target_config();
     // Update versions and IDs
