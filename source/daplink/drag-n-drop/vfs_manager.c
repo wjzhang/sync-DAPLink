@@ -39,6 +39,7 @@
 #include "file_stream.h"
 #include "error.h"
 
+#include "target_ids.h"
 #include "target_config.h"
 
 // Set to 1 to enable debugging
@@ -130,6 +131,9 @@ static uint32_t time_usb_idle;
 
 static OS_MUT sync_mutex;
 static OS_TID sync_thread = 0;
+
+// the drag&drop file is Bin/Hex format
+static bool   fileIsBinOrHex = false;
 
 // Synchronization functions
 static void sync_init(void);
@@ -331,7 +335,8 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
 
     // indicate DAP activity
     main_blink_hid_led(MAIN_LED_OFF);
-    vfs_write(sector, buf, num_of_sectors);
+    if (vfs_write(sector, buf, num_of_sectors) == true)
+        return;
     file_data_handler(sector, buf, num_of_sectors);
 }
 
@@ -363,6 +368,9 @@ static bool changing_state()
 
 static void build_filesystem()
 {
+    //init 
+    fileIsBinOrHex = false;
+
     // Update anything that could have changed file system state
     file_transfer_state = default_transfer_state;
     vfs_user_build_filesystem();
@@ -400,6 +408,8 @@ static void file_change_handler(const vfs_filename_t filename, vfs_file_change_t
             // the same extension to keep track of transfer info in some cases.
             if (!(VFS_FILE_ATTR_HIDDEN & vfs_file_get_attr(new_file_data))) {
                 stream = stream_type_from_name(filename);
+                if (STREAM_TYPE_NONE != stream)
+                        fileIsBinOrHex = true;
                 uint32_t size = vfs_file_get_size(new_file_data);
                 vfs_sector_t sector = vfs_file_get_start_sector(new_file_data);
                 transfer_update_file_info(file, sector, size, stream);
@@ -421,7 +431,9 @@ static void file_data_handler(uint32_t sector, const uint8_t *buf, uint32_t num_
 
     // this is the key for starting a file write - we dont care what file types are sent
     //  just look for something unique (NVIC table, hex, srec, etc) until root dir is updated
-    if (!file_transfer_state.stream_started) {        
+    if (!file_transfer_state.stream_started && fileIsBinOrHex == true) {
+        if ( targetID == Target_UNKNOWN )
+            targetID = swd_init_get_target();
         // look for file types we can program
         stream = stream_start_identify((uint8_t *)buf, VFS_SECTOR_SIZE * num_of_sectors);
 
@@ -659,6 +671,7 @@ static void transfer_stream_data(uint32_t sector, const uint8_t *data, uint32_t 
     util_assert(file_transfer_state.stream_open);
     status = stream_write((uint8_t *)data, size);
     vfs_mngr_printf("    stream_write ret=%i\r\n", status);
+    file_transfer_state.size_processed += size;
 
     if (ERROR_SUCCESS_DONE == status) {
         // Override status so ERROR_SUCCESS_DONE
@@ -669,13 +682,23 @@ static void transfer_stream_data(uint32_t sector, const uint8_t *data, uint32_t 
         file_transfer_state.stream_finished = true;
         file_transfer_state.stream_optional_finish = true;
     } else if (ERROR_SUCCESS_DONE_OR_CONTINUE == status) {
-        status = ERROR_SUCCESS;
-        file_transfer_state.stream_optional_finish = true;
+        if (file_transfer_state.size_processed < file_transfer_state.file_size)
+        {
+            status = ERROR_SUCCESS;
+            file_transfer_state.stream_optional_finish = true;
+        }
+        else
+        {
+            status = stream_close();
+            vfs_mngr_printf("    stream_close ret=%i\r\n", status);
+            file_transfer_state.stream_open = false;
+            file_transfer_state.stream_finished = true;
+            file_transfer_state.stream_optional_finish = true;            
+        }
     } else {
         file_transfer_state.stream_optional_finish = false;
     }
 
-    file_transfer_state.size_processed += size;
     transfer_update_state(status);
 }
 
@@ -778,6 +801,10 @@ static void transfer_update_state(error_t status)
         // Set the fail reason
         fail_reason = local_status;
         vfs_mngr_printf("    Transfer finished, status: %i=%s\r\n", fail_reason, error_get_string(fail_reason));
+        
+        target_set_state(RESET_RUN);
+        targetID = Target_UNKNOWN;
+        
     }
 
     // If this state change is not from aborting a transfer
