@@ -46,9 +46,34 @@ int32_t serial_reset(void)
 
 int32_t serial_set_configuration(UART_Configuration *config)
 {
-    uart_config = *config;
-    os_mbx_send(&serial_mailbox, (void *)SERIAL_SET_CONFIGURATION, 0);
-    return 1;
+    int32_t  needupdate = 0;
+    //check config
+    if(uart_config.Baudrate != config->Baudrate){
+        uart_config.Baudrate = config->Baudrate;
+        needupdate = 1;
+    }
+    if(uart_config.DataBits != config->DataBits){
+        uart_config.DataBits = config->DataBits;
+        needupdate = 1;
+    }
+    if(uart_config.Parity != config->Parity){
+        uart_config.Parity = config->Parity;
+        needupdate = 1;
+    }
+    if(uart_config.StopBits != config->StopBits){
+        uart_config.StopBits = config->StopBits;
+        needupdate = 1;
+    }
+    
+    if(uart_config.FlowControl != config->FlowControl){
+        uart_config.FlowControl = config->FlowControl;
+        needupdate = 1;
+    }
+
+    if(needupdate == 1){
+        os_mbx_send(&serial_mailbox, (void*)SERIAL_SET_CONFIGURATION, 0);
+    }
+    return 1;    
 }
 
 int32_t serial_get_configuration(UART_Configuration *config)
