@@ -31,7 +31,6 @@
 #include "RTL.h"
 #include "compiler.h"
 
-#include "target_config.h"
 
 typedef enum {
     STREAM_STATE_CLOSED,
@@ -142,9 +141,6 @@ error_t stream_open(stream_type_t stream_type)
         util_assert(0);
         return ERROR_INTERNAL;
     }
-
-    //get target ID
-    targetID = swd_init_get_target();
     
     stream_thread_set();
     // Initialize all variables
