@@ -78,11 +78,12 @@ int32_t uart_initialize(void)
 
 int32_t uart_uninitialize(void)
 {
-    // disable interrupt
+    // clear interrupt enable bits
     LPC_USART->IER &= ~(0x7);
-    NVIC_DisableIRQ(UART_IRQn);
     // reset uart
     uart_reset();
+    // disable UART
+    NVIC_DisableIRQ(UART_IRQn);
     return 1;
 }
 
@@ -127,10 +128,10 @@ int32_t uart_set_configuration(UART_Configuration *config)
     uint8_t DivAddVal = 0;
     uint8_t MulVal = 1;
     uint8_t mv, data_bits = 8, parity, stop_bits = 0;
-    // disable interrupt
-    NVIC_DisableIRQ(UART_IRQn);
     // reset uart
     uart_reset();
+    // disable interrupt
+    NVIC_DisableIRQ(UART_IRQn);
     //clear RTS
 	if(gpio_get_config(PIN_CONFIG_DT01) == PIN_HIGH)
 	{
