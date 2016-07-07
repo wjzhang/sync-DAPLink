@@ -8,7 +8,9 @@ common:
             - source/target/mesheven/DBG_nRF51822/nrf51_target_flash.c
             - source/target/mesheven/DBG_nRF51822/nrf51_target_reset.c            
             - source/target/mesheven/DBG_STM32F051/stm32f051_target_flash.c
+            - source/target/mesheven/DBG_STM32F051/stm32f051_target_reset.c 
             - source/target/mesheven/DBG_STM32F071/stm32f071_target_flash.c
+            - source/target/mesheven/DBG_STM32F071/stm32f071_target_reset.c 
             - source/target/mesheven/DBG_STM32F103RC/stm32f103_target_flash.c
             - source/target/mesheven/DBG_STM32F405/stm32f405_target_flash.c
             - source/target/mesheven/target.c                     

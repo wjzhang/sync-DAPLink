@@ -16,6 +16,7 @@
 #include "target_reset.h"
 #include "swd_host.h"
 #include "target_ids.h"
+#include "gpio.h"
 
 uint8_t targetID = Target_UNKNOWN;
 
@@ -27,6 +28,9 @@ typedef struct{
 }Target_Reset;
 
 uint8_t nrf51_target_set_state(TARGET_RESET_STATE state);
+uint8_t stm32f051_target_set_state(TARGET_RESET_STATE state);
+uint8_t stm32f071_target_set_state(TARGET_RESET_STATE state);
+
 
 void common_target_before_init_debug(void)
 {
@@ -45,16 +49,20 @@ uint8_t common_security_bits_set(uint32_t addr, uint8_t *data, uint32_t size)
 
 uint8_t common_target_set_state(TARGET_RESET_STATE state)
 {
-    return swd_set_target_state_hw(state);
+	if (gpio_get_config(PIN_CONFIG_DT01) == PIN_HIGH) {
+        return swd_set_target_state_hw(state);
+    } else {
+        return swd_set_target_state_sw(state);        
+    }
 }
 
 
 static const Target_Reset targets[] = {
-    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, nrf51_target_set_state     },
-    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
-    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
-    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
-    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state    },
+    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, nrf51_target_set_state        }, //nRF51
+    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, stm32f051_target_set_state    }, //STM32F051
+    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state       }, //STM32F103
+    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, common_target_set_state       }, //STM32F405
+    {common_target_before_init_debug    , common_target_unlock_sequence    , common_security_bits_set, stm32f071_target_set_state    }, //STM32F071
 };
 
 
