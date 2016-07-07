@@ -869,7 +869,6 @@ uint8_t swd_init_get_target(void)
     volatile uint32_t i = 0 ;
     uint32_t tmp = 0;
     uint32_t tmpid = 0;    
-    uint32_t val;
 
     swd_init();
 
@@ -914,19 +913,6 @@ uint8_t swd_init_get_target(void)
         }
     } while ((tmp & (CDBGPWRUPACK | CSYSPWRUPACK)) != (CDBGPWRUPACK | CSYSPWRUPACK));
 
-   
-    //halt CPU
-    // Enable halt on reset
-    if (!swd_write_word(DBG_HCSR, DBGKEY | C_DEBUGEN | C_HALT)) {
-        return Target_UNKNOWN;
-    }
-    //wait to halt
-    do {
-        if (!swd_read_word(DBG_HCSR, &val)) {
-            return Target_UNKNOWN;
-        }
-    } while((val & S_HALT) == 0);  
- 
     // core ID -> target ID    
     return get_target_id(tmpid);
 }
@@ -1044,11 +1030,23 @@ uint8_t swd_set_target_state_sw(TARGET_RESET_STATE state)
             break;
 
         case RESET_RUN:
-            swd_set_target_reset(1);
-            os_dly_wait(2);
-            swd_set_target_reset(0);
-            os_dly_wait(2);
-            swd_off();
+            if (!swd_init_debug()) {
+                return 0;
+            }
+            //enable debug
+			if (!swd_write_word(DBG_HCSR, DBGKEY | C_DEBUGEN)) {
+                return 0;                
+            }
+			//disable halt reset
+			if (!swd_write_word(DBG_EMCR, 0)) {
+                return 0;                
+            }
+            
+            //SysReset
+            if (!swd_write_word(NVIC_AIRCR, VECTKEY | SOFT_RESET)) {
+                 return 0;               
+            }
+            
             break;
 
         case RESET_PROGRAM:
