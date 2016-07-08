@@ -115,7 +115,8 @@ static const char *const error_message[] = {
     "",
     // ERROR_BL_UPDT_BAD_CRC
     "The bootloader CRC did not pass.",
-
+    // ERROR_TARGET_UNKNOWN
+    "unsupported target device."
 };
 COMPILER_ASSERT(ERROR_COUNT == ELEMENTS_IN_ARRAY(error_message));
 

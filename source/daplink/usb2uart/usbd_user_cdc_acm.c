@@ -108,28 +108,6 @@ int32_t USBD_CDC_ACM_PortGetLineCoding(CDC_LINE_CODING *line_coding)
     return (0);
 }
 
-static U32 start_break_time = 0;
-int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
-{
-    uint32_t end_break_time;
-
-    // reset and send the unique id over CDC
-    if (dur != 0) {
-        start_break_time = os_time_get();
-        target_set_state(RESET_HOLD);
-    } else {
-        end_break_time = os_time_get();
-
-        // long reset -> send uID over serial (300 -> break > 3s)
-        if ((end_break_time - start_break_time) >= (300)) {
-            main_reset_target(1);
-        } else {
-            main_reset_target(0);
-        }
-    }
-
-    return (1);
-}
 
 /** @brief  Virtual COM Port set control line state
  *
@@ -141,7 +119,13 @@ int32_t USBD_CDC_ACM_SendBreak(uint16_t dur)
  *  @return 0 Function failed.
  *  @return 1 Function succeeded.
  */
+uint8_t stopCDCLed = 0; 
 int32_t USBD_CDC_ACM_PortSetControlLineState(uint16_t ctrl_bmp)
 {
+    if (ctrl_bmp & 0x01) {
+        stopCDCLed = 0;
+    } else {
+        stopCDCLed = 1;
+    }    
     return (1);
 }

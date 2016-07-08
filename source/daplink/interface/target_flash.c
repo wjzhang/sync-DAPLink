@@ -32,6 +32,8 @@
 #include "util.h"
 #include "settings.h"
 
+#include "target_ids.h"
+
 static error_t target_flash_init(void);
 static error_t target_flash_uninit(void);
 static error_t target_flash_program_page(uint32_t adr, const uint8_t *buf, uint32_t size);
@@ -52,10 +54,17 @@ static const flash_intf_t flash_intf = {
 
 const flash_intf_t *const flash_intf_target = &flash_intf;
 
+static uint32_t lastEraseSectorNumber = 0xFFFFFFFF;
+
 static error_t target_flash_init()
 {
-    const program_target_t *const flash = target_device.flash_algo;
+    if (targetID == Target_UNKNOWN)
+        return ERROR_TARGET_UNKNOWN;
+    
+    const program_target_t *const flash = target_device[targetID].flash_algo;
 
+    lastEraseSectorNumber = 0xFFFFFFFF;
+    
     if (0 == target_set_state(RESET_PROGRAM)) {
         return ERROR_RESET;
     }
@@ -65,7 +74,7 @@ static error_t target_flash_init()
         return ERROR_ALGO_DL;
     }
 
-    if (0 == swd_flash_syscall_exec(&flash->sys_call_s, flash->init, target_device.flash_start, 0, 0, 0)) {
+    if (0 == swd_flash_syscall_exec(&flash->sys_call_s, flash->init, target_device[targetID].flash_start, 0, 0, 0)) {
         return ERROR_INIT;
     }
 
@@ -85,7 +94,10 @@ static error_t target_flash_uninit(void)
 
 static error_t target_flash_program_page(uint32_t addr, const uint8_t *buf, uint32_t size)
 {
-    const program_target_t *const flash = target_device.flash_algo;
+    if (targetID == Target_UNKNOWN)
+        return ERROR_TARGET_UNKNOWN;
+    
+    const program_target_t *const flash = target_device[targetID].flash_algo;
 
     // check if security bits were set
     if (1 == security_bits_set(addr, (uint8_t *)buf, size)) {
@@ -94,7 +106,20 @@ static error_t target_flash_program_page(uint32_t addr, const uint8_t *buf, uint
 
     while (size > 0) {
         uint32_t write_size = MIN(size, flash->program_buffer_size);
-
+        uint32_t nextSectorAddress = 0;
+        uint32_t currentSectorNumber = target_device[targetID].get_sector_number(addr);
+        if (currentSectorNumber != lastEraseSectorNumber) {
+            if(ERROR_SUCCESS != target_flash_erase_sector(currentSectorNumber)){
+                return ERROR_ERASE_SECTOR;
+            }						
+            lastEraseSectorNumber = currentSectorNumber;
+        }
+          //check is cross sectors
+        nextSectorAddress = target_device[targetID].get_sector_address(currentSectorNumber) + target_device[targetID].get_sector_length(currentSectorNumber);
+        if((addr + write_size)  >  nextSectorAddress){
+            write_size = nextSectorAddress - addr;
+        }
+        
         // Write page to buffer
         if (!swd_write_memory(flash->program_buffer, (uint8_t *)buf, write_size)) {
             return ERROR_ALGO_DATA_SEQ;
@@ -104,7 +129,7 @@ static error_t target_flash_program_page(uint32_t addr, const uint8_t *buf, uint
         if (!swd_flash_syscall_exec(&flash->sys_call_s,
                                     flash->program_page,
                                     addr,
-                                    flash->program_buffer_size,
+                                    write_size,
                                     flash->program_buffer,
                                     0)) {
             return ERROR_WRITE;
@@ -120,9 +145,15 @@ static error_t target_flash_program_page(uint32_t addr, const uint8_t *buf, uint
 
 static error_t target_flash_erase_sector(uint32_t sector)
 {
-    const program_target_t *const flash = target_device.flash_algo;
+    uint32_t address = 0;
 
-    if (0 == swd_flash_syscall_exec(&flash->sys_call_s, flash->erase_sector, sector * target_device.sector_size, 0, 0, 0)) {
+    if (targetID == Target_UNKNOWN)
+        return ERROR_TARGET_UNKNOWN;
+    
+    const program_target_t *const flash = target_device[targetID].flash_algo;
+
+    address =	target_device[targetID].get_sector_address(sector);
+    if (0 == swd_flash_syscall_exec(&flash->sys_call_s, flash->erase_sector, address, 0, 0, 0)) {
         return ERROR_ERASE_SECTOR;
     }
 
@@ -132,14 +163,14 @@ static error_t target_flash_erase_sector(uint32_t sector)
 static error_t target_flash_erase_chip(void)
 {
     error_t status = ERROR_SUCCESS;
-    const program_target_t *const flash = target_device.flash_algo;
+    const program_target_t *const flash = target_device[targetID].flash_algo;
 
     if (0 == swd_flash_syscall_exec(&flash->sys_call_s, flash->erase_chip, 0, 0, 0, 0)) {
         return ERROR_ERASE_ALL;
     }
 
     // Reset and re-initialize the target after the erase if required
-    if (target_device.erase_reset) {
+    if (target_device[targetID].erase_reset) {
         status = target_flash_init();
     }
 
@@ -149,11 +180,11 @@ static error_t target_flash_erase_chip(void)
 static uint32_t target_flash_program_page_min_size(uint32_t addr)
 {
     uint32_t size = 256;
-    util_assert(target_device.sector_size >= size);
+    util_assert(target_device[targetID].sector_size >= size);
     return size;
 }
 
 static uint32_t target_flash_erase_sector_size(uint32_t addr)
 {
-    return target_device.sector_size;
+    return target_device[targetID].sector_size;
 }

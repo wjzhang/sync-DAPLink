@@ -46,6 +46,10 @@ typedef struct {
     const uint32_t  algo_size;
     const uint32_t *algo_blob;
     const uint32_t  program_buffer_size;
+    
+    uint32_t flash_sector_size;
+    uint32_t auto_increment_page_size;
+    uint32_t flash_base_addr;    
 } program_target_t;
 
 #ifdef __cplusplus

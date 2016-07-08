@@ -31,6 +31,7 @@
 #include "RTL.h"
 #include "compiler.h"
 
+
 typedef enum {
     STREAM_STATE_CLOSED,
     STREAM_STATE_OPEN,
@@ -140,7 +141,7 @@ error_t stream_open(stream_type_t stream_type)
         util_assert(0);
         return ERROR_INTERNAL;
     }
-
+    
     stream_thread_set();
     // Initialize all variables
     memset(&shared_state, 0, sizeof(shared_state));

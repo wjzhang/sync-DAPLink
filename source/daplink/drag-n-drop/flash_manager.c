@@ -95,15 +95,6 @@ error_t flash_manager_init(const flash_intf_t *flash_intf)
         return status;
     }
 
-    // Erase flash and unint if there are errors
-    status = intf->erase_chip();
-    flash_manager_printf("    intf->erase_chip ret=%i\r\n", status);
-
-    if (ERROR_SUCCESS != status) {
-        intf->uninit();
-        return status;
-    }
-
     state = STATE_OPEN;
     return status;
 }

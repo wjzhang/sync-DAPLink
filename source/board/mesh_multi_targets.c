@@ -1,6 +1,6 @@
 /**
- * @file    gpio.h
- * @brief   
+ * @file    mesh_multi_targets.c
+ * @brief   board ID for the Mesheven multi-targets: nRF51/STM32F051/STM32F072/STM32F103/STM32F405
  *
  * DAPLink Interface Firmware
  * Copyright (c) 2009-2016, ARM Limited, All Rights Reserved
@@ -19,44 +19,4 @@
  * limitations under the License.
  */
 
-#ifndef GPIO_H
-#define GPIO_H
-
-#include "IO_Config.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-enum
-{
-	PIN_CONFIG_DT01 = 0,
-	PIN_CONFIG_1    = 1,
-	PIN_CONFIG_2    = 2,
-	PIN_CONFIG_3    = 3,	
-};
-
-enum
-{
-	PIN_LOW  = 0,
-	PIN_HIGH = 1,
-};    
-
-// wiring on PCB is unknown so implementations may vary
-typedef enum led_state {
-    GPIO_LED_OFF = 0,
-    GPIO_LED_ON
-} gpio_led_state_t;
-
-void gpio_init(void);
-void gpio_set_hid_led(gpio_led_state_t state);
-void gpio_set_cdc_led(gpio_led_state_t state);
-uint8_t gpio_get_sw_reset(void);
-
-uint8_t gpio_get_config(uint8_t cfgid);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+const char *board_id = "2000";

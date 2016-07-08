@@ -166,7 +166,7 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
 */
 static __inline void PORT_SWD_SETUP(void)
 {
-    LPC_GPIO->SET[PIN_SWCLK_PORT] = PIN_SWCLK;
+    LPC_GPIO->CLR[PIN_SWCLK_PORT] = PIN_SWCLK;
     LPC_GPIO->SET[PIN_SWDIO_PORT] = PIN_SWDIO;
     // open drain logic
     LPC_GPIO->DIR[PIN_nRESET_PORT] &= ~PIN_nRESET;
@@ -181,9 +181,12 @@ Disables the DAP Hardware I/O pins which configures:
 */
 static __inline void PORT_OFF(void)
 {
+    LPC_GPIO->CLR[PIN_SWCLK_PORT] = PIN_SWCLK;
+    LPC_GPIO->SET[PIN_SWDIO_PORT] = PIN_SWDIO;    
     LPC_GPIO->DIR[PIN_nRESET_PORT] &= ~PIN_nRESET;
-    LPC_GPIO->DIR[PIN_SWCLK_PORT] &= ~PIN_SWCLK;
-    LPC_GPIO->DIR[PIN_SWDIO_PORT] &= ~PIN_SWDIO;
+    LPC_GPIO->CLR[PIN_nRESET_PORT] = PIN_nRESET;
+    LPC_GPIO->DIR[PIN_SWCLK_PORT] |= PIN_SWCLK;
+    LPC_GPIO->DIR[PIN_SWDIO_PORT] |= PIN_SWDIO;
 }
 
 

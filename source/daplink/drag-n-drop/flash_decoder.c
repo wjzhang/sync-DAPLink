@@ -137,7 +137,7 @@ error_t flash_decoder_get_flash(flash_decoder_type_t type, uint32_t addr, bool a
                 flash_intf_local = flash_intf_iap_protected;
             }
         } else if (FLASH_DECODER_TYPE_TARGET == type) {
-            flash_start_local = target_device.flash_start;
+            flash_start_local = target_device[targetID].flash_start;
             flash_intf_local = flash_intf_target;
         }
     } else {
@@ -338,7 +338,7 @@ static bool flash_decoder_is_at_end(uint32_t addr, const uint8_t *data, uint32_t
             break;
 
         case FLASH_DECODER_TYPE_TARGET:
-            end_addr = target_device.flash_end;
+            end_addr = target_device[targetID].flash_end;
             break;
 
         default:

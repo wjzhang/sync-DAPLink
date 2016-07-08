@@ -32,7 +32,7 @@ const vfs_filename_t daplink_mode_file_name = "START_BLACT";
 __attribute__((weak))
 const vfs_filename_t daplink_url_name =       "MBED    HTM";
 __attribute__((weak))
-const vfs_filename_t daplink_drive_name =     "DAPLINK    ";
+const vfs_filename_t daplink_drive_name =     "MESH-DBG   ";
 __attribute__((weak))
 const char *const daplink_target_url = "https://mbed.org/device/?code=@U?version=@V?target_id=@T";
 

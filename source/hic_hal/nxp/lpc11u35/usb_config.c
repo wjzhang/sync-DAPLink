@@ -192,7 +192,7 @@
 #define USBD_MSC_STRDESC            L"USB_MSC"
 // Make sure changes to USBD_MSC_INQUIRY_DATA are coordinated with mbed-ls
 // since this is used to detect DAPLink drives
-#define USBD_MSC_INQUIRY_DATA       "MBED    "         \
+#define USBD_MSC_INQUIRY_DATA       "MESH-DBG"         \
                                     "VFS             " \
                                     "0.1"
 

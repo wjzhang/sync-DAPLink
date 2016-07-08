@@ -98,7 +98,7 @@ const char *info_get_unique_id_string_descriptor(void)
 static void setup_basics()
 {
     uint8_t i = 0, idx = 0;
-    memset(string_board_id, 0, sizeof(string_board_id));
+    memset(string_version, 0, sizeof(string_version));
     memset(string_host_id, 0, sizeof(string_host_id));
     memset(string_target_id, 0, sizeof(string_target_id));
     memset(string_hic_id, 0, sizeof(string_hic_id));

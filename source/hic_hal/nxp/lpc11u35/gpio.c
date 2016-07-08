@@ -81,15 +81,26 @@ void gpio_init(void)
 {
     // enable clock for GPIO port 0
     LPC_SYSCON->SYSAHBCLKCTRL |= (1UL << 6);
+    
+	//config the CFG 4 pins as input
+    PIN_CFG0_IOCON = PIN_CFG0_IOCON_INIT;
+    LPC_GPIO->CLR[PIN_CFG0_PORT] = PIN_CFG0;
+    LPC_GPIO->DIR[PIN_CFG0_PORT] &= ~PIN_CFG0;
+    PIN_CFG1_IOCON = PIN_CFG1_IOCON_INIT;
+    LPC_GPIO->CLR[PIN_CFG1_PORT] = PIN_CFG1;
+    LPC_GPIO->DIR[PIN_CFG1_PORT] &= ~PIN_CFG1;
+    PIN_CFG2_IOCON = PIN_CFG2_IOCON_INIT;
+    LPC_GPIO->CLR[PIN_CFG2_PORT] = PIN_CFG2;
+    LPC_GPIO->DIR[PIN_CFG2_PORT] &= ~PIN_CFG2;
+    PIN_CFG3_IOCON = PIN_CFG3_IOCON_INIT;
+    LPC_GPIO->CLR[PIN_CFG3_PORT] = PIN_CFG3;
+    LPC_GPIO->DIR[PIN_CFG3_PORT] &= ~PIN_CFG3;    
+    
     // configure GPIO-LED as output
     // DAP led (green)
     PIN_DAP_LED_IOCON = PIN_DAP_LED_IOCON_INIT;
     LPC_GPIO->SET[PIN_DAP_LED_PORT] = PIN_DAP_LED;
     LPC_GPIO->DIR[PIN_DAP_LED_PORT] |= PIN_DAP_LED;
-    // MSD led (red)
-    PIN_MSD_LED_IOCON = PIN_MSD_LED_IOCON_INIT;
-    LPC_GPIO->SET[PIN_MSD_LED_PORT] = PIN_MSD_LED;
-    LPC_GPIO->DIR[PIN_MSD_LED_PORT] |= PIN_MSD_LED;
     // Serial LED (blue)
     PIN_CDC_LED_IOCON = PIN_CDC_LED_IOCON_INIT;
     LPC_GPIO->SET[PIN_CDC_LED_PORT] = PIN_CDC_LED;
@@ -141,13 +152,49 @@ void gpio_set_cdc_led(gpio_led_state_t state)
     }
 }
 
-void gpio_set_msc_led(gpio_led_state_t state)
+static uint32_t gpio_get_config0(void)
 {
-    if (state) {
-        LPC_GPIO->SET[PIN_MSD_LED_PORT] = PIN_MSD_LED;
-    } else {
-        LPC_GPIO->CLR[PIN_MSD_LED_PORT] = PIN_MSD_LED;
+	return ((LPC_GPIO->PIN[PIN_CFG0_PORT] & PIN_CFG0) != 0x00)? PIN_HIGH:PIN_LOW;
+}
+
+static uint32_t gpio_get_config1(void)
+{
+	return ((LPC_GPIO->PIN[PIN_CFG1_PORT] & PIN_CFG1) != 0x00)? PIN_HIGH:PIN_LOW;
+}
+
+static uint32_t gpio_get_config2(void)
+{
+	return ((LPC_GPIO->PIN[PIN_CFG2_PORT] & PIN_CFG2) != 0x00)? PIN_HIGH:PIN_LOW;
+}
+
+static uint32_t gpio_get_config3(void)
+{
+	return ((LPC_GPIO->PIN[PIN_CFG3_PORT] & PIN_CFG3) != 0x00)? PIN_HIGH:PIN_LOW;
+}
+
+uint8_t gpio_get_config(uint8_t cfgid)
+{
+    uint8_t rc = 0;
+	switch (cfgid)
+	{
+        case PIN_CONFIG_DT01:
+            rc = gpio_get_config0();
+            break;
+
+		case PIN_CONFIG_1:
+			rc = gpio_get_config1();
+			break;
+
+		case PIN_CONFIG_2:
+			rc = gpio_get_config2();
+            break;
+
+		case PIN_CONFIG_3:
+			rc = gpio_get_config3();
+			break;
     }
+
+	return rc;
 }
 
 uint8_t gpio_get_sw_reset(void)
