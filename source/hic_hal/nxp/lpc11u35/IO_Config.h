@@ -50,7 +50,7 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_LPC11U35);
 #define PIN_DAP_LED_BIT                 13
 #define PIN_DAP_LED                     (1 << PIN_DAP_LED_BIT)
 #define PIN_DAP_LED_IOCON               LPC_IOCON->TDO_PIO0_13
-#define PIN_DAP_LED_IOCON_INIT          (FUNC_0 | PULL_UP_ENABLED)
+#define PIN_DAP_LED_IOCON_INIT          (FUNC_1 | PULL_UP_ENABLED)
 
 // CDC LED                              PIO0_12
 #define PIN_CDC_LED_PORT                0
@@ -127,13 +127,13 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_LPC11U35);
 #define PIN_CFG2_BIT                    11
 #define PIN_CFG2                        (1 << PIN_CFG2_BIT)
 #define PIN_CFG2_IOCON                  LPC_IOCON->TDI_PIO0_11
-#define PIN_CFG2_IOCON_INIT             (FUNC_0 | PULL_UP_ENABLED)
+#define PIN_CFG2_IOCON_INIT             (FUNC_1 | PULL_UP_ENABLED)
 
 // CFG3 pin                             PIO0_14
 #define PIN_CFG3_PORT                   0
 #define PIN_CFG3_BIT                    14
 #define PIN_CFG3                        (1 << PIN_CFG3_BIT)
 #define PIN_CFG3_IOCON                  LPC_IOCON->TRST_PIO0_14
-#define PIN_CFG3_IOCON_INIT             (FUNC_0 | PULL_UP_ENABLED)
+#define PIN_CFG3_IOCON_INIT             (FUNC_1 | PULL_UP_ENABLED)
 
 #endif
