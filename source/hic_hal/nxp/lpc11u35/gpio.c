@@ -136,7 +136,7 @@ void gpio_init(void)
 
 void gpio_set_hid_led(gpio_led_state_t state)
 {
-    if (state) {
+    if (!state) {
         LPC_GPIO->SET[PIN_DAP_LED_PORT] = PIN_DAP_LED;
     } else {
         LPC_GPIO->CLR[PIN_DAP_LED_PORT] = PIN_DAP_LED;
@@ -145,7 +145,7 @@ void gpio_set_hid_led(gpio_led_state_t state)
 
 void gpio_set_cdc_led(gpio_led_state_t state)
 {
-    if (state) {
+    if (!state) {
         LPC_GPIO->SET[PIN_CDC_LED_PORT] = PIN_CDC_LED;
     } else {
         LPC_GPIO->CLR[PIN_CDC_LED_PORT] = PIN_CDC_LED;
