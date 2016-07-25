@@ -48,6 +48,14 @@ uint32_t DAP_ProcessVendorCommand(uint8_t *request, uint8_t *response)
         memcpy(response + 2, id_str, len);
         return (len + 2);
     }
+    // get CPU type command
+    else if (*request == ID_DAP_Vendor1) {
+        uint8_t targetID = swd_init_get_target();
+
+        *response = ID_DAP_Vendor1;
+        *(response + 1) = targetID;
+        return 2;
+    }    
     else if (*request == ID_DAP_Vendor31) {
         main_identification_led(*(request+1));
         *response = ID_DAP_Vendor31;        
