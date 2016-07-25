@@ -334,7 +334,7 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
     }
 
     // indicate DAP activity
-    main_blink_hid_led(MAIN_LED_OFF);
+    main_blink_hid_led(MAIN_LED_FLASH);
     if (vfs_write(sector, buf, num_of_sectors) == true)
         return;
     file_data_handler(sector, buf, num_of_sectors);
