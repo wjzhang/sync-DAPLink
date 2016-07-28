@@ -76,9 +76,10 @@ static main_led_state_t hid_led_state = MAIN_LED_FLASH;
 static main_led_state_t cdc_led_state = MAIN_LED_FLASH;
 static uint8_t hid_led_identify_activity = 0;
 static uint8_t cdc_led_identify_activity = 0;
-static    gpio_led_state_t hid_led_value = GPIO_LED_OFF;
-static    gpio_led_state_t cdc_led_value = GPIO_LED_OFF;  
-
+static gpio_led_state_t hid_led_value = GPIO_LED_OFF;
+static gpio_led_state_t cdc_led_value = GPIO_LED_OFF;  
+static uint16_t hid_led_identify_counter = 0;
+static uint16_t cdc_led_identify_counter = 0;
 
 // Global state of usb
 main_usb_connect_t usb_state;
@@ -160,22 +161,20 @@ void main_blink_cdc_led(main_led_state_t permanent)
 }
 
 // Flash DAP/Serail LED
-void main_identification_led(uint8_t on)
+void main_identification_led(uint16_t time)
 {
-    if (on) {
-        cdc_led_identify_activity = 1;
-        cdc_led_state = MAIN_LED_FLASH_PERMANENT;
-        hid_led_identify_activity = 1;
-        hid_led_state = MAIN_LED_FLASH_PERMANENT;
-        hid_led_value = GPIO_LED_OFF;
-        cdc_led_value = GPIO_LED_OFF;        
-    }
-    else {
-        cdc_led_identify_activity = 1;
-        cdc_led_state = MAIN_LED_FLASH;
-        hid_led_identify_activity = 1;
-        hid_led_state = MAIN_LED_FLASH;        
-    }        
+    uint16_t counter = 0;
+    cdc_led_identify_activity = 1;
+    hid_led_identify_activity = 1;
+    hid_led_value = GPIO_LED_OFF;
+    cdc_led_value = GPIO_LED_OFF;
+
+    counter = time / 180;
+    if ((counter % 2) != 0)
+        counter++;
+
+    cdc_led_identify_counter = counter;
+    hid_led_identify_counter = counter;     
 }
 
 // Power down the interface
@@ -467,15 +466,12 @@ __task void main_task(void)
                 // Flash DAP LED ONCE
                 if (hid_led_value == GPIO_LED_ON) {
                     hid_led_value = GPIO_LED_OFF;
-
-                    if (hid_led_state == MAIN_LED_FLASH) {
-                        hid_led_identify_activity = 0;
-                    }
-                } else {
+                  } else {
                     hid_led_value = GPIO_LED_ON; // Turn on
-
                 }
-
+                hid_led_identify_counter--;
+                if (hid_led_identify_counter == 0)
+                    hid_led_identify_activity = 0;
                 // Update hardware
                 gpio_set_hid_led(hid_led_value);
             }
@@ -484,14 +480,12 @@ __task void main_task(void)
                 // Flash CDC LED ONCE
                 if (cdc_led_value == GPIO_LED_ON) {
                     cdc_led_value = GPIO_LED_OFF;
-
-                    if (cdc_led_state == MAIN_LED_FLASH) {
-                        cdc_led_identify_activity = 0;
-                    }
                 } else {
                     cdc_led_value = GPIO_LED_ON; // Turn on
                 }
-
+                cdc_led_identify_counter--;
+                if (cdc_led_identify_counter == 0)
+                    cdc_led_identify_activity = 0;                
                 // Update hardware
                 gpio_set_cdc_led(cdc_led_value);
             }

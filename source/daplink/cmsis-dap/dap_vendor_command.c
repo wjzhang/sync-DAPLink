@@ -29,7 +29,7 @@
 #include "uart.h"
 #include "DAP.h"
 
-void main_identification_led(uint8_t on);
+void main_identification_led(uint16_t time);
 
 // Process DAP Vendor command and prepare response
 // Default function (can be overridden)
@@ -57,7 +57,8 @@ uint32_t DAP_ProcessVendorCommand(uint8_t *request, uint8_t *response)
         return 2;
     }    
     else if (*request == ID_DAP_Vendor31) {
-        main_identification_led(*(request+1));
+        uint16_t time = request[1]  | (request[2] << 8) ;
+        main_identification_led(time);
         *response = ID_DAP_Vendor31;        
     }    
     // else return invalid command
