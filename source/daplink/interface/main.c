@@ -165,7 +165,7 @@ void main_identification_led(uint16_t time)
 {
     uint16_t counter = 0;
     cdc_led_identify_activity = 1;
-    hid_led_identify_activity = 1;
+    hid_led_identify_activity = 1; 
     hid_led_value = GPIO_LED_OFF;
     cdc_led_value = GPIO_LED_OFF;
 
@@ -174,7 +174,7 @@ void main_identification_led(uint16_t time)
         counter++;
 
     cdc_led_identify_counter = counter;
-    hid_led_identify_counter = counter;     
+    hid_led_identify_counter = counter;    
 }
 
 // Power down the interface
@@ -469,9 +469,12 @@ __task void main_task(void)
                   } else {
                     hid_led_value = GPIO_LED_ON; // Turn on
                 }
-                hid_led_identify_counter--;
-                if (hid_led_identify_counter == 0)
+                if (hid_led_identify_counter != 0) {
+                    hid_led_identify_counter--;
+                } else {
                     hid_led_identify_activity = 0;
+                    hid_led_value = GPIO_LED_OFF;
+                }                                
                 // Update hardware
                 gpio_set_hid_led(hid_led_value);
             }
@@ -483,9 +486,12 @@ __task void main_task(void)
                 } else {
                     cdc_led_value = GPIO_LED_ON; // Turn on
                 }
-                cdc_led_identify_counter--;
-                if (cdc_led_identify_counter == 0)
-                    cdc_led_identify_activity = 0;                
+                if (cdc_led_identify_counter != 0) {
+                    cdc_led_identify_counter--;
+                } else {
+                    cdc_led_identify_activity = 0;
+                    cdc_led_value = GPIO_LED_OFF;                    
+                }
                 // Update hardware
                 gpio_set_cdc_led(cdc_led_value);
             }
