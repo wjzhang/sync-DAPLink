@@ -28,6 +28,8 @@
 #include "DAP_config.h"
 #include "uart.h"
 #include "DAP.h"
+#include "target_config.h"
+#include "read_uid.h"
 
 void main_identification_led(uint16_t time);
 
@@ -55,6 +57,15 @@ uint32_t DAP_ProcessVendorCommand(uint8_t *request, uint8_t *response)
         *response = ID_DAP_Vendor1;
         *(response + 1) = targetID;
         return 2;
+    }
+    else if (*request == ID_DAP_Vendor2) {
+        uint32_t fullUniqueId[4];
+        read_full_unique_id(fullUniqueId);
+
+        *response = ID_DAP_Vendor2;
+        *(response + 1) = 16;
+        memcpy(response + 2, (uint8_t *)fullUniqueId, 16);
+        return (16 + 2);
     }    
     else if (*request == ID_DAP_Vendor31) {
         uint16_t time = request[1]  | (request[2] << 8) ;
