@@ -32,9 +32,25 @@ void read_unique_id(uint32_t *id)
     // readUID IAP call
     iap_entry = (IAP) IAP_LOCATION;
     command[0] = 58;
+    __disable_irq();      
     iap_entry(command, result);
+    __enable_irq();    
     *id = result[1] ^ result[2] ^ result[3] ^ result[4];
 }
+
+void read_full_unique_id(uint32_t * id) {
+    // readUID IAP call
+    iap_entry = (IAP) IAP_LOCATION;
+    command[0] = 58;
+    __disable_irq();
+    iap_entry (command, result);
+    __enable_irq();    
+    id[0] = result[1];
+    id[1] = result[2];
+    id[2] = result[3];
+    id[3] = result[4];
+}
+
 
 #ifdef BOARD_UBLOX_C027
 #include "LPC11Uxx.h"
