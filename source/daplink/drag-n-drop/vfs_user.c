@@ -30,15 +30,15 @@
 #include "settings.h"
 #include "target_reset.h"
 #include "daplink.h"
-#include "IO_config.h"      // for NVIC_SystemReset
+#include "IO_Config.h"      // for NVIC_SystemReset
 #include "version_git.h"
 #include "info.h"
 #include "gpio.h"           // for gpio_get_sw_reset
 #include "flash_intf.h"     // for flash_intf_target
 
 // Must be bigger than 4x the flash size of the biggest supported
-// device.  This is to accomidate for hex file programming.
-static const uint32_t disc_size = MB(8);
+// device.  This is to accomodate for hex file programming.
+static const uint32_t disc_size = MB(64);
 
 static const char mbed_redirect_file[] =
     "<!doctype html>\r\n"
@@ -81,8 +81,8 @@ void vfs_user_build_filesystem()
     // Setup the filesystem based on target parameters
     vfs_init(daplink_drive_name, disc_size);
     // MBED.HTM
-    file_size = get_file_size(read_file_mbed_htm);
-    vfs_create_file(daplink_url_name, read_file_mbed_htm, 0, file_size);
+//    file_size = get_file_size(read_file_mbed_htm);
+//    vfs_create_file(daplink_url_name, read_file_mbed_htm, 0, file_size);
     // DETAILS.TXT
     file_size = get_file_size(read_file_details_txt);
     vfs_create_file("DETAILS TXT", read_file_details_txt, 0, file_size);
@@ -216,9 +216,9 @@ static uint32_t read_file_details_txt(uint32_t sector_offset, uint8_t *data, uin
     }
 
     pos = 0;
-    pos += util_write_string(buf + pos, "# DAPLink Firmware - see https://mbed.com/daplink\r\n");
+    pos += util_write_string(buf + pos, "# DAPLink Firmware - see https://github.com/mesheven/DAPLink\r\n");
     // Unique ID
-    pos += util_write_string(buf + pos, "Unique ID: ");
+    pos += util_write_string(buf + pos, "Serial Number: ");
     pos += util_write_string(buf + pos, info_get_unique_id());
     pos += util_write_string(buf + pos, "\r\n");
     // HIC ID

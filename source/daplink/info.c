@@ -106,7 +106,10 @@ static void setup_basics()
     // Host ID
     idx = 0;
 
-    for (i = 0; i < 4; i++) {
+//    for (i = 0; i < 4; i++) {
+//        idx += util_write_hex32(string_host_id + idx, host_id[i]);
+//    }
+    for (i = 0; i < 2; i++) {
         idx += util_write_hex32(string_host_id + idx, host_id[i]);
     }
 
@@ -139,10 +142,10 @@ static void setup_basics()
 static void setup_unique_id()
 {
     memset(string_unique_id, 0, sizeof(string_unique_id));
-    strcat(string_unique_id, string_board_id);
-    strcat(string_unique_id, "0000");           // Reserved - was version number
+//    strcat(string_unique_id, string_board_id);
+//    strcat(string_unique_id, "0000");           // Reserved - was version number
     strcat(string_unique_id, string_host_id);
-    strcat(string_unique_id, string_hic_id);
+//    strcat(string_unique_id, string_hic_id);
 }
 
 static void setup_string_descriptor()

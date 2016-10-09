@@ -276,6 +276,7 @@ __task void serial_process()
 }
 
 extern __task void hid_process(void);
+__attribute__((weak)) void prerun_board_config(void) {}
 __attribute__((weak)) void prerun_target_config(void) {}
 
     
@@ -308,6 +309,7 @@ __task void main_task(void)
     // Initialize the DAP
     swd_init();
     // do some init with the target before USB and files are configured
+    prerun_board_config();
     prerun_target_config();
     // Update versions and IDs
     info_init();

@@ -46,6 +46,8 @@ void vfs_mngr_fs_enable(bool enabled);
 // Remount the virtual filesystem
 void vfs_mngr_fs_remount(void);
 
+// Abort a remount if it is pending
+void vfs_mngr_fs_remount_abort(void);    
 
 /* Callable only from the thread running the virtual fs */
 

@@ -35,7 +35,9 @@ void read_unique_id(uint32_t *id)
     __disable_irq();      
     iap_entry(command, result);
     __enable_irq();    
-    *id = result[1] ^ result[2] ^ result[3] ^ result[4];
+//    *id = result[1] ^ result[2] ^ result[3] ^ result[4];
+    id[0] = result[1] ^ result[2];
+    id[1] = result[3] ^ result[4];
 }
 
 void read_full_unique_id(uint32_t * id) {
