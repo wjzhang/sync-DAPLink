@@ -40,20 +40,20 @@
 // device.  This is to accomodate for hex file programming.
 static const uint32_t disc_size = MB(64);
 
-static const char mbed_redirect_file[] =
-    "<!doctype html>\r\n"
-    "<!-- mbed Platform Website and Authentication Shortcut -->\r\n"
-    "<html>\r\n"
-    "<head>\r\n"
-    "<meta charset=\"utf-8\">\r\n"
-    "<title>mbed Website Shortcut</title>\r\n"
-    "</head>\r\n"
-    "<body>\r\n"
-    "<script>\r\n"
-    "window.location.replace(\"@R\");\r\n"
-    "</script>\r\n"
-    "</body>\r\n"
-    "</html>\r\n";
+//static const char mbed_redirect_file[] =
+//    "<!doctype html>\r\n"
+//    "<!-- mbed Platform Website and Authentication Shortcut -->\r\n"
+//    "<html>\r\n"
+//    "<head>\r\n"
+//    "<meta charset=\"utf-8\">\r\n"
+//    "<title>mbed Website Shortcut</title>\r\n"
+//    "</head>\r\n"
+//    "<body>\r\n"
+//    "<script>\r\n"
+//    "window.location.replace(\"@R\");\r\n"
+//    "</script>\r\n"
+//    "</body>\r\n"
+//    "</html>\r\n";
 
 static const vfs_filename_t assert_file = "ASSERT  TXT";
 
@@ -64,14 +64,14 @@ static assert_source_t assert_source;
 
 static uint32_t get_file_size(vfs_read_cb_t read_func);
 
-static uint32_t read_file_mbed_htm(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors);
+//static uint32_t read_file_mbed_htm(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors);
 static uint32_t read_file_details_txt(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors);
 static uint32_t read_file_fail_txt(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors);
 static uint32_t read_file_assert_txt(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors);
 static uint32_t read_file_need_bl_txt(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors);
 
-static void insert(uint8_t *buf, uint8_t *new_str, uint32_t strip_count);
-static void update_html_file(uint8_t *buf, uint32_t bufsize);
+//static void insert(uint8_t *buf, uint8_t *new_str, uint32_t strip_count);
+//static void update_html_file(uint8_t *buf, uint32_t bufsize);
 static void erase_target(void);
 
 void vfs_user_build_filesystem()
@@ -194,15 +194,15 @@ static uint32_t get_file_size(vfs_read_cb_t read_func)
 }
 
 // File callback to be used with vfs_add_file to return file contents
-static uint32_t read_file_mbed_htm(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors)
-{
-    if (sector_offset != 0) {
-        return 0;
-    }
-
-    update_html_file(data, VFS_SECTOR_SIZE);
-    return strlen((const char *)data);
-}
+//static uint32_t read_file_mbed_htm(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors)
+//{
+//    if (sector_offset != 0) {
+//        return 0;
+//    }
+//
+//    update_html_file(data, VFS_SECTOR_SIZE);
+//    return strlen((const char *)data);
+//}
 
 // File callback to be used with vfs_add_file to return file contents
 static uint32_t read_file_details_txt(uint32_t sector_offset, uint8_t *data, uint32_t num_sectors)
@@ -364,88 +364,88 @@ static uint32_t read_file_need_bl_txt(uint32_t sector_offset, uint8_t *data, uin
 
 // Remove strip_count characters from the start of buf and then insert
 // new_str at the new start of buf.
-static void insert(uint8_t *buf, uint8_t *new_str, uint32_t strip_count)
-{
-    uint32_t buf_len = strlen((const char *)buf);
-    uint32_t str_len = strlen((const char *)new_str);
-    // push out string
-    memmove(buf + str_len, buf + strip_count, buf_len - strip_count);
-    // insert
-    memcpy(buf, new_str, str_len);
-}
+//static void insert(uint8_t *buf, uint8_t *new_str, uint32_t strip_count)
+//{
+//    uint32_t buf_len = strlen((const char *)buf);
+//    uint32_t str_len = strlen((const char *)new_str);
+//    // push out string
+//    memmove(buf + str_len, buf + strip_count, buf_len - strip_count);
+//    // insert
+//    memcpy(buf, new_str, str_len);
+//}
 
 // Fill buf with the contents of the mbed redirect file by
 // expanding the special characters in mbed_redirect_file.
-static void update_html_file(uint8_t *buf, uint32_t bufsize)
-{
-    uint32_t size_left;
-    uint8_t *orig_buf = buf;
-    uint8_t *insert_string;
-    // Zero out buffer so strlen operations don't go out of bounds
-    memset(buf, 0, bufsize);
-    memcpy(buf, mbed_redirect_file, strlen(mbed_redirect_file));
-
-    do {
-        // Look for key or the end of the string
-        while ((*buf != '@') && (*buf != 0)) {
-            buf++;
-        }
-
-        // If key was found then replace it
-        if ('@' == *buf) {
-            switch (*(buf + 1)) {
-                case 'm':
-                case 'M':   // MAC address
-                    insert_string = (uint8_t *)info_get_mac();
-                    break;
-
-                case 'u':
-                case 'U':   // UUID
-                    insert_string = (uint8_t *)info_get_unique_id();
-                    break;
-
-                case 'b':
-                case 'B':   // Board ID
-                    insert_string = (uint8_t *)info_get_board_id();
-                    break;
-
-                case 'h':
-                case 'H':   // Host ID
-                    insert_string = (uint8_t *)info_get_host_id();
-                    break;
-
-                case 't':
-                case 'T':   // Target ID
-                    insert_string = (uint8_t *)info_get_target_id();
-                    break;
-
-                case 'd':
-                case 'D':   // HIC
-                    insert_string = (uint8_t *)info_get_hic_id();
-                    break;
-
-                case 'v':
-                case 'V':   // Firmware version
-                    insert_string = (uint8_t *)info_get_version();
-                    break;
-
-                case 'r':
-                case 'R':   // URL replacement
-                    insert_string = (uint8_t *)daplink_target_url;
-                    break;
-
-                default:
-                    insert_string = (uint8_t *)"ERROR";
-                    break;
-            }
-
-            insert(buf, insert_string, 2);
-        }
-    } while (*buf != '\0');
-
-    size_left = buf - orig_buf;
-    memset(buf, 0, bufsize - size_left);
-}
+//static void update_html_file(uint8_t *buf, uint32_t bufsize)
+//{
+//    uint32_t size_left;
+//    uint8_t *orig_buf = buf;
+//    uint8_t *insert_string;
+//    // Zero out buffer so strlen operations don't go out of bounds
+//    memset(buf, 0, bufsize);
+//    memcpy(buf, mbed_redirect_file, strlen(mbed_redirect_file));
+//
+//    do {
+//        // Look for key or the end of the string
+//        while ((*buf != '@') && (*buf != 0)) {
+//            buf++;
+//        }
+//
+//        // If key was found then replace it
+//        if ('@' == *buf) {
+//            switch (*(buf + 1)) {
+//                case 'm':
+//                case 'M':   // MAC address
+//                    insert_string = (uint8_t *)info_get_mac();
+//                    break;
+//
+//                case 'u':
+//                case 'U':   // UUID
+//                    insert_string = (uint8_t *)info_get_unique_id();
+//                    break;
+//
+//                case 'b':
+//                case 'B':   // Board ID
+//                    insert_string = (uint8_t *)info_get_board_id();
+//                    break;
+//
+//                case 'h':
+//                case 'H':   // Host ID
+//                    insert_string = (uint8_t *)info_get_host_id();
+//                    break;
+//
+//                case 't':
+//                case 'T':   // Target ID
+//                    insert_string = (uint8_t *)info_get_target_id();
+//                    break;
+//
+//                case 'd':
+//                case 'D':   // HIC
+//                    insert_string = (uint8_t *)info_get_hic_id();
+//                    break;
+//
+//                case 'v':
+//                case 'V':   // Firmware version
+//                    insert_string = (uint8_t *)info_get_version();
+//                    break;
+//
+//                case 'r':
+//                case 'R':   // URL replacement
+//                    insert_string = (uint8_t *)daplink_target_url;
+//                    break;
+//
+//                default:
+//                    insert_string = (uint8_t *)"ERROR";
+//                    break;
+//            }
+//
+//            insert(buf, insert_string, 2);
+//        }
+//    } while (*buf != '\0');
+//
+//    size_left = buf - orig_buf;
+//    memset(buf, 0, bufsize - size_left);
+//}
 
 // Initialize flash algo, erase flash, uninit algo
 static void erase_target(void)
