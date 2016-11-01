@@ -59,19 +59,13 @@ COMPILER_ASSERT(DAPLINK_HIC_ID == DAPLINK_HIC_ID_LPC11U35);
 #define PIN_CDC_LED_IOCON               LPC_IOCON->TMS_PIO0_12
 #define PIN_CDC_LED_IOCON_INIT          (FUNC_1 | PULL_UP_ENABLED)
 
-// Non-Forwarded Reset in PIN           PIO0_1
-#define PIN_RESET_IN_PORT               0
-#define PIN_RESET_IN_BIT                1
-#define PIN_RESET_IN                    (1 << PIN_RESET_IN_BIT)
-#define PIN_RESET_IN_IOCON              LPC_IOCON->PIO0_1
-#define PIN_RESET_IN_IOCON_INIT         (FUNC_0 | OPENDRAIN | PULL_UP_ENABLED)
 
-// Forwarded Reset in PIN               PIO1_19
-#define PIN_RESET_IN_FWRD_PORT          1
-#define PIN_RESET_IN_FWRD_BIT           19
+// Forwarded Reset in PIN               PIO0_2
+#define PIN_RESET_IN_FWRD_PORT          0
+#define PIN_RESET_IN_FWRD_BIT           2
 #define PIN_RESET_IN_FWRD               (1 << PIN_RESET_IN_FWRD_BIT)
-#define PIN_RESET_IN_FWRD_IOCON         LPC_IOCON->PIO1_19
-#define PIN_RESET_IN_FWRD_IOCON_INIT    (FUNC_0 | OPENDRAIN | PULL_UP_ENABLED)
+#define PIN_RESET_IN_FWRD_IOCON         LPC_IOCON->PIO0_2
+#define PIN_RESET_IN_FWRD_IOCON_INIT    (FUNC_0 | PULL_UP_ENABLED)
 
 // nRESET OUT Pin                       PIO0_23
 #define PIN_nRESET_PORT                 0
