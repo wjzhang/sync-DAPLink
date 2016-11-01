@@ -105,15 +105,11 @@ void gpio_init(void)
     PIN_CDC_LED_IOCON = PIN_CDC_LED_IOCON_INIT;
     LPC_GPIO->SET[PIN_CDC_LED_PORT] = PIN_CDC_LED;
     LPC_GPIO->DIR[PIN_CDC_LED_PORT] |= PIN_CDC_LED;
-    // configure Button(s) as input
-    PIN_RESET_IN_IOCON = PIN_RESET_IN_IOCON_INIT;
-    LPC_GPIO->DIR[PIN_RESET_IN_PORT] &= ~PIN_RESET_IN;
+    
+    // configure Button(s) as input   
     PIN_RESET_IN_FWRD_IOCON = PIN_RESET_IN_FWRD_IOCON_INIT;
     LPC_GPIO->DIR[PIN_RESET_IN_FWRD_PORT] &= ~PIN_RESET_IN_FWRD;
-    // open drain logic for reset button
-    PIN_nRESET_IOCON = PIN_nRESET_IOCON_INIT;
-    LPC_GPIO->CLR[PIN_nRESET_PORT] = PIN_nRESET;
-    LPC_GPIO->DIR[PIN_nRESET_PORT] &= ~PIN_nRESET;
+    
     /* Enable AHB clock to the FlexInt, GroupedInt domain. */
     LPC_SYSCON->SYSAHBCLKCTRL |= ((1 << 19) | (1 << 23) | (1 << 24));
     // Give the cap on the reset button time to charge
@@ -217,7 +213,7 @@ uint8_t gpio_get_sw_reset(void)
         last_reset_forward_pressed = reset_forward_pressed;
     }
 
-    reset_pressed = reset_forward_pressed || (LPC_GPIO->PIN[PIN_RESET_IN_PORT] & PIN_RESET_IN ? 0 : 1);
+    reset_pressed = reset_forward_pressed ;
     return !reset_pressed;
 }
 
