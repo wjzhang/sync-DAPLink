@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef TARGET_IDS_H
-#define TARGET_IDS_H
-
-enum Target_IDs
+ 
+#include "target_reset.h"
+#include "swd_host.h"
+ 
+uint8_t stm32f031_target_set_state(TARGET_RESET_STATE state)
 {
-    Target_NRF51822  = 0,
-    Target_STM32F051 = 1,
-    Target_STM32F103 = 2,
-    Target_STM32F405 = 3,
-    Target_STM32F071 = 4,    
-    Target_STM32F031 = 5,    
-    
-    Target_UNKNOWN   = 0xFF
-};
+    return swd_set_target_state_sw(state);
+}
 
-
-#endif  //TARGET_IDS_H

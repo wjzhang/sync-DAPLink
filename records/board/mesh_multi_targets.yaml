@@ -6,7 +6,9 @@ common:
             - source/board/mesh_multi_targets.c
         target:
             - source/target/mesheven/DBG_nRF51822/nrf51_target_flash.c
-            - source/target/mesheven/DBG_nRF51822/nrf51_target_reset.c            
+            - source/target/mesheven/DBG_nRF51822/nrf51_target_reset.c        
+            - source/target/mesheven/DBG_STM32F031/stm32f031_target_flash.c
+            - source/target/mesheven/DBG_STM32F031/stm32f031_target_reset.c             
             - source/target/mesheven/DBG_STM32F051/stm32f051_target_flash.c
             - source/target/mesheven/DBG_STM32F051/stm32f051_target_reset.c 
             - source/target/mesheven/DBG_STM32F071/stm32f071_target_flash.c
