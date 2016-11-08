@@ -29,6 +29,7 @@ extern const program_target_t stm32f051_flash;
 extern const program_target_t stm32f071_flash;
 extern const program_target_t stm32f103_flash;
 extern const program_target_t stm32f405_flash;
+extern const program_target_t stm32f031_flash;
     
 uint32_t nrf51_GetSecNum (uint32_t addr);
 uint32_t nrf51_GetSecAddress(uint32_t sector);
@@ -49,6 +50,10 @@ uint32_t stm32f103_GetSecLength(uint32_t sector);
 uint32_t stm32f405_GetSecNum (uint32_t addr);
 uint32_t stm32f405_GetSecAddress (uint32_t sector);
 uint32_t stm32f405_GetSecLength (uint32_t sector);
+
+uint32_t stm32f031_GetSecNum (uint32_t addr);
+uint32_t stm32f031_GetSecAddress(uint32_t sector);
+uint32_t stm32f031_GetSecLength(uint32_t sector);
 
 // target information
 const target_cfg_t target_device[] = 
@@ -117,6 +122,19 @@ const target_cfg_t target_device[] =
         .get_sector_number = stm32f071_GetSecNum,
         .get_sector_address = stm32f071_GetSecAddress,
         .get_sector_length = stm32f071_GetSecLength,        
-    }
+    },
+    //stm32f031
+    {
+        .sector_size    = 1024,
+        .sector_cnt     = 32,
+        .flash_start    = 0x08000000,
+        .flash_end      = 0x08008000,
+        .ram_start      = 0x20000000,
+        .ram_end        = 0x20001000,
+        .flash_algo     = (program_target_t *) &stm32f031_flash,
+        .get_sector_number = stm32f031_GetSecNum,
+        .get_sector_address = stm32f031_GetSecAddress,
+        .get_sector_length = stm32f031_GetSecLength,        
+    }    
     
 };
