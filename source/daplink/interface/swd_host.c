@@ -856,7 +856,14 @@ static uint8_t get_target_id(uint32_t coreid)
             }else if(tmp == 0x00000444){
                 rc = Target_STM32F031;
             }else if(tmp == 0x00000000){
-                rc = Target_NRF51822;
+                //check again
+                if (!swd_read_word(0x10000000, &tmp)) {
+                   rc = Target_UNKNOWN;
+                } else if (tmp == 0x55AA55AA) {
+                    rc = Target_NRF51822;
+                } else {
+                    rc = Target_UNKNOWN;
+                }
             }else{
                 rc = Target_UNKNOWN;
             }
@@ -870,8 +877,11 @@ uint8_t swd_init_get_target(void)
 {
     volatile uint32_t i = 0 ;
     uint32_t tmp = 0;
-    uint32_t tmpid = 0;    
-
+    uint32_t tmpid = 0;
+    
+    // init dap state with fake values
+    dap_state.select = 0xffffffff;
+    dap_state.csw = 0xffffffff;
     swd_init();
 
     //add Reset Pin
@@ -915,6 +925,19 @@ uint8_t swd_init_get_target(void)
         }
     } while ((tmp & (CDBGPWRUPACK | CSYSPWRUPACK)) != (CDBGPWRUPACK | CSYSPWRUPACK));
 
+    // need halt MCU for read right data from Peripher address space when power on
+    // Enable debug and halt the core (DHCSR <- 0xA05F0003)
+    if (!swd_write_word(DBG_HCSR, DBGKEY | C_DEBUGEN | C_HALT)) {
+        return 0;
+    }
+
+    // Wait until core is halted
+    do {
+        if (!swd_read_word(DBG_HCSR, &tmp)) {
+            return 0;
+        }
+    } while ((tmp & S_HALT) == 0);    
+    
     // core ID -> target ID    
     return get_target_id(tmpid);
 }
