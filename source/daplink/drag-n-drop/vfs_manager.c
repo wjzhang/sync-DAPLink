@@ -449,8 +449,9 @@ static void file_data_handler(uint32_t sector, const uint8_t *buf, uint32_t num_
     // this is the key for starting a file write - we dont care what file types are sent
     //  just look for something unique (NVIC table, hex, srec, etc) until root dir is updated
     if (!file_transfer_state.stream_started && fileIsBinOrHex == true) {
-        if ( targetID == Target_UNKNOWN )
+        if ( targetID == Target_UNKNOWN ) {
             targetID = swd_init_get_target();
+        }
         // look for file types we can program
         stream = stream_start_identify((uint8_t *)buf, VFS_SECTOR_SIZE * num_of_sectors);
 
