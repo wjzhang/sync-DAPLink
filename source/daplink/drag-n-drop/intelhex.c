@@ -183,7 +183,6 @@ hexfile_parse_status_t parse_hex_blob(const uint8_t *hex_blob, const uint32_t he
                                 // Need to exit and program if buffer has been filled
                                 status = HEX_PARSE_UNALIGNED;
                                 return status;                                
-                                break;
                             
                             case START_SEG_ADDR_RECORD:                           
                             case START_LINEAR_ADDR_RECORD:                           
