@@ -942,6 +942,59 @@ uint8_t swd_init_get_target(void)
     return get_target_id(tmpid);
 }
 
+uint8_t swd_init_get_target_no_resetandhalt(void)
+{
+    volatile uint32_t i = 0 ;
+    uint32_t tmp = 0;
+    uint32_t tmpid = 0;
+    
+    // init dap state with fake values
+    dap_state.select = 0xffffffff;
+    dap_state.csw = 0xffffffff;
+    swd_init();
+
+    //need wait 500us
+    for( i = 0; i < 1200; i++) {}
+
+   //init SWD sequence and get IDcode
+    if (!swd_reset()) {
+        return Target_UNKNOWN;
+    }
+    if (!swd_switch(0xE79E)) {
+        return Target_UNKNOWN;
+    }
+    if (!swd_reset()) {
+        return Target_UNKNOWN;
+    }
+    if (!swd_read_idcode(&tmpid)) {
+        return Target_UNKNOWN;
+    }
+
+    if (!swd_write_dp(DP_ABORT, STKCMPCLR | STKERRCLR | WDERRCLR | ORUNERRCLR)) {
+        return Target_UNKNOWN;
+    }
+
+    // Ensure CTRL/STAT register selected in DPBANKSEL
+    if (!swd_write_dp(DP_SELECT, 0)) {
+        return Target_UNKNOWN;
+    }
+
+    // Power up
+    if (!swd_write_dp(DP_CTRL_STAT, CSYSPWRUPREQ | CDBGPWRUPREQ)) {
+        return Target_UNKNOWN;
+    }
+
+    do {
+        if (!swd_read_dp(DP_CTRL_STAT, &tmp)) {
+            return Target_UNKNOWN;
+        }
+    } while ((tmp & (CDBGPWRUPACK | CSYSPWRUPACK)) != (CDBGPWRUPACK | CSYSPWRUPACK));
+
+   
+    // core ID -> target ID    
+    return get_target_id(tmpid);
+}
+
 __attribute__((weak)) void swd_set_target_reset(uint8_t asserted)
 {
     (asserted) ? PIN_nRESET_OUT(0) : PIN_nRESET_OUT(1);
