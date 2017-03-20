@@ -52,7 +52,7 @@ uint32_t DAP_ProcessVendorCommand(uint8_t *request, uint8_t *response)
     }
     // get CPU type command
     else if (*request == ID_DAP_Vendor1) {
-        uint8_t targetID = swd_init_get_target();
+        uint8_t targetID = swd_init_get_target_no_resetandhalt();
 
         *response = ID_DAP_Vendor1;
         *(response + 1) = targetID;

@@ -63,6 +63,8 @@ typedef struct target_cfg {
 extern const target_cfg_t target_device[];
 extern uint8_t targetID;
 uint8_t swd_init_get_target(void);
+uint8_t swd_init_get_target_no_resetandhalt(void);
+
 
 #ifdef __cplusplus
 }
