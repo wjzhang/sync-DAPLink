@@ -177,7 +177,6 @@ __task void hid_process(void *argv)
         }
         os_mut_release(&hid_mutex);
 
-        os_mut_release(&hid_mutex);
         main_blink_hid_led(MAIN_LED_OFF);
     }
 }

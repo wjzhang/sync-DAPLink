@@ -223,28 +223,7 @@ void HardFault_Handler()
     util_assert(0);
     NVIC_SystemReset();
 
-        if (len_data) {
-            if (USBD_CDC_ACM_DataSend(data , len_data)) {
-                main_blink_cdc_led(MAIN_LED_OFF);
-            }
-        }
-
-        len_data = uart_write_free();
-
-        if (len_data > SIZE_DATA) {
-            len_data = SIZE_DATA;
-        }
-
-        if (len_data) {
-            len_data = USBD_CDC_ACM_DataRead(data, len_data);
-        }
-
-        if (len_data) {
-            if (uart_write_data(data, len_data)) {
-                main_blink_cdc_led(MAIN_LED_OFF);
-            }
-        }
-    }
+    while (1); // Wait for reset
 }
 
 extern __task void hid_process(void);
@@ -259,9 +238,10 @@ __task void main_task(void)
     // State processing
     uint16_t flags = 0;
     // LED
-    gpio_led_state_t hid_led_value = GPIO_LED_ON;
-    gpio_led_state_t cdc_led_value = GPIO_LED_ON;
-    gpio_led_state_t msc_led_value = GPIO_LED_ON;
+//    gpio_led_state_t hid_led_value = GPIO_LED_OFF;
+//    gpio_led_state_t cdc_led_value = GPIO_LED_OFF;  
+    hid_led_value = GPIO_LED_OFF;
+    cdc_led_value = GPIO_LED_OFF;  
     // USB
     uint32_t usb_state_count = USB_BUSY_TIME;
     // thread running after usb connected started
@@ -275,9 +255,8 @@ __task void main_task(void)
     // leds
     gpio_init();
     // Turn off LED
-    gpio_set_hid_led(GPIO_LED_ON);
-    gpio_set_cdc_led(GPIO_LED_ON);
-    gpio_set_msc_led(GPIO_LED_ON);
+    gpio_set_hid_led(GPIO_LED_OFF);
+    gpio_set_cdc_led(GPIO_LED_OFF);
     // Initialize the DAP
     swd_init();
     // do some init with the target before USB and files are configured
@@ -301,6 +280,8 @@ __task void main_task(void)
                        | FLAGS_MAIN_POWERDOWN       // Power down interface
                        | FLAGS_MAIN_DISABLEDEBUG    // Disable target debug
                        | FLAGS_MAIN_PROC_USB        // process usb events
+                       | FLAGS_MAIN_HID_SEND        // send hid packet
+                       | FLAGS_MAIN_CDC_EVENT       // cdc event
                        | FLAGS_LED_IDENTIFY_180MS   // process the identify LED
                        , NO_TIMEOUT);
         // Find out what event happened
@@ -413,38 +394,40 @@ __task void main_task(void)
                     break;
             }
 
-            if (hid_led_usb_activity && ((hid_led_state == MAIN_LED_FLASH) || (hid_led_state == MAIN_LED_FLASH_PERMANENT))) {
+            if (hid_led_usb_activity && (!hid_led_identify_activity) && ((hid_led_state == MAIN_LED_FLASH) || (hid_led_state == MAIN_LED_FLASH_PERMANENT))) {
                 // Flash DAP LED ONCE
-                if (hid_led_value) {
+                if (hid_led_value == GPIO_LED_ON) {
                     hid_led_value = GPIO_LED_OFF;
-                } else {
-                    hid_led_value = GPIO_LED_ON; // Turn on
 
                     if (hid_led_state == MAIN_LED_FLASH) {
                         hid_led_usb_activity = 0;
                     }
+                } else {
+                    hid_led_value = GPIO_LED_ON; // Turn on
+
                 }
 
                 // Update hardware
                 gpio_set_hid_led(hid_led_value);
             }
 
-            if (msc_led_usb_activity && ((msc_led_state == MAIN_LED_FLASH) || (msc_led_state == MAIN_LED_FLASH_PERMANENT))) {
-                // Flash MSD LED ONCE
-                if (msc_led_value) {
-                    msc_led_value = GPIO_LED_OFF;
-                } else {
-                    msc_led_value = GPIO_LED_ON; // Turn on
+            if (cdc_led_usb_activity && (!cdc_led_identify_activity) && ((cdc_led_state == MAIN_LED_FLASH) || (cdc_led_state == MAIN_LED_FLASH_PERMANENT))) {
+                // Flash CDC LED ONCE
+                if (cdc_led_value == GPIO_LED_ON) {
+                    cdc_led_value = GPIO_LED_OFF;
 
-                    if (msc_led_state == MAIN_LED_FLASH) {
-                        msc_led_usb_activity = 0;
+                    if (cdc_led_state == MAIN_LED_FLASH) {
+                        cdc_led_usb_activity = 0;
                     }
+                } else {
+                    cdc_led_value = GPIO_LED_ON; // Turn on
                 }
 
                 // Update hardware
                 gpio_set_cdc_led(cdc_led_value);
             }
         }
+
         // 180mS tick used for flashing LED when USB is busy
         if (flags & FLAGS_LED_IDENTIFY_180MS) {
             if (hid_led_identify_activity ) {
