@@ -66,6 +66,10 @@ projects:
         - *module_if
         - *module_hic_kl26z
         - records/board/microbit.yaml
+    kl26z_nina_b1_if:
+        - *module_if
+        - *module_hic_kl26z
+        - records/board/nina_b1.yaml
     k20dx_frdmk20dx_if:
         - *module_if
         - *module_hic_k20dx
@@ -74,14 +78,30 @@ projects:
         - *module_if
         - *module_hic_k20dx
         - records/board/frdmk22f.yaml
-    k20dx_frdmkw24f_if:
+    k20dx_frdmkw24d_if:
         - *module_if
         - *module_hic_k20dx
-        - records/board/frdmkw24f.yaml
+        - records/board/frdmkw24d.yaml
     k20dx_frdmk64f_if:
         - *module_if
         - *module_hic_k20dx
         - records/board/frdmk64f.yaml
+    k20dx_frdmk66f_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmk66f.yaml
+    k20dx_frdmk82f_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmk82f.yaml
+    k20dx_frdmk28f_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmk28f.yaml
+    k20dx_frdmke15z_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmke15z.yaml
     k20dx_frdmkl02z_if:
         - *module_if
         - *module_hic_k20dx
@@ -98,10 +118,38 @@ projects:
         - *module_if
         - *module_hic_k20dx
         - records/board/frdmkl26z.yaml
+    k20dx_frdmkl27z_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmkl27z.yaml
+    k20dx_frdmkl43z_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmkl43z.yaml
     k20dx_frdmkl46z_if:
         - *module_if
         - *module_hic_k20dx
         - records/board/frdmkl46z.yaml
+    k20dx_frdmkl28z_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmkl28z.yaml
+    k20dx_frdmkl82z_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/frdmkl82z.yaml
+    k20dx_twrkl28z72m_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/twrkl28z72m.yaml
+    k20dx_twrke18f_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/twrke18f.yaml
+    k20dx_hvpke18f_if:
+        - *module_if
+        - *module_hic_k20dx
+        - records/board/hvpke18f.yaml
     k20dx_rbl_if:
         - *module_if
         - *module_hic_k20dx
@@ -198,7 +246,23 @@ projects:
         - *module_if
         - *module_hic_lpc11u35
         - records/board/6LoWPAN_BorderRouterETHERNET.yaml
+    lpc11u35_cocorico_if:
+        - *module_if
+        - *module_hic_lpc11u35
+        - records/board/cocorico.yaml
+    lpc11u35_gr_peach_if:
+        - *module_if
+        - *module_hic_lpc11u35
+        - records/board/gr-peach.yaml
+    lpc11u35_blueninja_if:
+        - *module_if
+        - *module_hic_lpc11u35
+        - records/board/blueninja.yaml
+    sam3u2c_ncs36510rf_if:
+        - *module_if
+        - *module_hic_sam3u2c
+        - records/board/ncs36510rf.yaml        
     lpc11u35_multi_targets_if:
         - *module_if
         - *module_hic_lpc11u35
-        - records/board/mesh_multi_targets.yaml 
+        - records/board/mesh_multi_targets.yaml

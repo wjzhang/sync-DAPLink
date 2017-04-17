@@ -146,6 +146,7 @@ static void build_filesystem(void);
 static void file_change_handler(const vfs_filename_t filename, vfs_file_change_t change, vfs_file_t file, vfs_file_t new_file_data);
 static void file_data_handler(uint32_t sector, const uint8_t *buf, uint32_t num_of_sectors);
 static bool ready_for_state_change(void);
+static void abort_remount(void);
 
 static void transfer_update_file_info(vfs_file_t file, uint32_t start_sector, uint32_t size, stream_type_t stream);
 static void transfer_reset_file_info(void);
@@ -347,10 +348,12 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
         return;
     }
 
-    // indicate DAP activity
-    main_blink_hid_led(MAIN_LED_FLASH);
-    if (vfs_write(sector, buf, num_of_sectors) == true)
+    // indicate msc activity
+    main_blink_msc_led(MAIN_LED_OFF);
+    vfs_write(sector, buf, num_of_sectors);
+    if (TRASNFER_FINISHED == file_transfer_state.transfer_state) {
         return;
+    }
     file_data_handler(sector, buf, num_of_sectors);
 }
 
@@ -402,6 +405,10 @@ static void file_change_handler(const vfs_filename_t filename, vfs_file_change_t
 {
     vfs_mngr_printf("vfs_manager file_change_handler(name=%*s, file=%p, change=%i)\r\n", 11, filename, file, change);
     vfs_user_file_change_handler(filename, change, file, new_file_data);
+    if (TRASNFER_FINISHED == file_transfer_state.transfer_state) {
+        // If the transfer is finished stop further processing
+        return;
+    }
 
     if (VFS_FILE_CHANGED == change) {
         if (file == file_transfer_state.file_to_program) {
@@ -551,6 +558,19 @@ static bool ready_for_state_change(void)
     return time_usb_idle > timeout_ms ? true : false;
 }
 
+// Abort a remount if one is pending
+void abort_remount(void)
+{
+    sync_lock();
+
+    // Only abort a remount if in the connected state and reconnecting is the next state
+    if ((VFS_MNGR_STATE_RECONNECTING == vfs_state_next) && (VFS_MNGR_STATE_CONNECTED == vfs_state)) {
+        vfs_state_next = VFS_MNGR_STATE_CONNECTED;
+    }
+
+    sync_unlock();
+}
+
 // Update the tranfer state with file information
 static void transfer_update_file_info(vfs_file_t file, uint32_t start_sector, uint32_t size, stream_type_t stream)
 {
@@ -609,15 +629,9 @@ static void transfer_update_file_info(vfs_file_t file, uint32_t start_sector, ui
         return;
     }
 
-//    // Update values - Size is the only value that can change and it can only increase.
-//    if (size > file_transfer_state.file_size) {
-//        file_transfer_state.file_size = size;
-//        vfs_mngr_printf("    updated size=%i\r\n", size);
-//    }
-
     // Update values - Size is the only value that can change
     file_transfer_state.file_size = size;
-    vfs_mngr_printf("    updated size=%i\r\n", size);    
+    vfs_mngr_printf("    updated size=%i\r\n", size);
 
     transfer_update_state(ERROR_SUCCESS);
 }
@@ -630,7 +644,7 @@ static void transfer_reset_file_info()
         transfer_update_state(ERROR_ERROR_DURING_TRANSFER);
     } else {
         file_transfer_state = default_transfer_state;
-        vfs_mngr_fs_remount_abort();
+        abort_remount();
     }
 }
 
@@ -732,6 +746,7 @@ static void transfer_stream_data(uint32_t sector, const uint8_t *data, uint32_t 
     } else {
         file_transfer_state.stream_optional_finish = false;
     }
+
 
     transfer_update_state(status);
 }

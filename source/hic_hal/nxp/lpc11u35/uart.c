@@ -23,6 +23,8 @@
 #include "uart.h"
 #include "util.h"
 #include "gpio.h"
+#include "circ_buf.h"
+#include "settings.h" // for config_get_overflow_detect
 
 static uint32_t baudrate;
 static uint32_t dll;
@@ -30,16 +32,16 @@ static uint32_t tx_in_progress;
 
 extern uint32_t SystemCoreClock;
 
-// Size must be 2^n
-#define  BUFFER_SIZE (64)
+#define RX_OVRF_MSG         "<DAPLink:Overflow>\n"
+#define RX_OVRF_MSG_SIZE    (sizeof(RX_OVRF_MSG) - 1)
+#define BUFFER_SIZE         (64)
 
-static struct {
-    uint8_t  data[BUFFER_SIZE];
-    volatile uint16_t idx_in;
-    volatile uint16_t idx_out;
-    volatile  int32_t cnt_in;
-    volatile  int32_t cnt_out;
-} write_buffer, read_buffer;
+circ_buf_t write_buffer;
+uint8_t write_buffer_data[BUFFER_SIZE];
+circ_buf_t read_buffer;
+uint8_t read_buffer_data[BUFFER_SIZE];
+
+static int32_t reset(void);
 
 int32_t uart_initialize(void)
 {
@@ -58,7 +60,7 @@ int32_t uart_initialize(void)
 	{	
         LPC_IOCON->PIO0_7  = 0x11; // CTS
         LPC_IOCON->PIO0_17 = 0x11; // RTS
-	}    
+	}        
     // enable FIFOs (trigger level 1) and clear them
     LPC_USART->FCR = 0x87;
     // Transmit Enable
@@ -67,57 +69,31 @@ int32_t uart_initialize(void)
 	if(gpio_get_config(PIN_CONFIG_DT01) == PIN_HIGH)
 	{        
         LPC_USART->MCR = (1 << 7) | (1 << 6); // Enable RTS and CTS flow control 
-	}    
+	}      
     // reset uart
-    uart_reset();
-    // enable rx and rx error interrupt
-    LPC_USART->IER = (1 << 0) | (1 << 2);
+    reset();
+    // enable rx and tx interrupt
+    LPC_USART->IER |= (1 << 0) | (1 << 1);
     NVIC_EnableIRQ(UART_IRQn);
     return 1;
 }
 
 int32_t uart_uninitialize(void)
 {
-    // clear interrupt enable bits
+    // disable interrupt
     LPC_USART->IER &= ~(0x7);
-    // reset uart
-    uart_reset();
-    // disable UART
     NVIC_DisableIRQ(UART_IRQn);
+    // reset uart
+    reset();
     return 1;
 }
 
 int32_t uart_reset(void)
 {
-    uint8_t *ptr;
-    int32_t  i;
     // disable interrupt
     NVIC_DisableIRQ(UART_IRQn);
-    // enable FIFOs (trigger level 1) and clear them
-    LPC_USART->FCR = 0x87;
-    
-    baudrate  = 0;
-    dll       = 0;
-    tx_in_progress = 0;
-    ptr = (uint8_t *)&write_buffer;
-
-    for (i = 0; i < sizeof(write_buffer); i++) {
-        *ptr++ = 0;
-    }
-
-    ptr = (uint8_t *)&read_buffer;
-
-    for (i = 0; i < sizeof(read_buffer); i++) {
-        *ptr++ = 0;
-    }
-
-    // Ensure a clean start, no data in either TX or RX FIFO
-    while ((LPC_USART->LSR & ((1 << 5) | (1 << 6))) != ((1 << 5) | (1 << 6)));
-
-    while (LPC_USART->LSR & 0x01) {
-        LPC_USART->RBR;    // Dump data from RX FIFO
-    }
-
+    // reset uart
+    reset();
     // enable interrupt
     NVIC_EnableIRQ(UART_IRQn);
     return 1;
@@ -128,16 +104,16 @@ int32_t uart_set_configuration(UART_Configuration *config)
     uint8_t DivAddVal = 0;
     uint8_t MulVal = 1;
     uint8_t mv, data_bits = 8, parity, stop_bits = 0;
-    // reset uart
-    uart_reset();
     // disable interrupt
     NVIC_DisableIRQ(UART_IRQn);
     //clear RTS
 	if(gpio_get_config(PIN_CONFIG_DT01) == PIN_HIGH)
 	{
         LPC_USART->MCR = (1 << 1);  
-	}    
+	}   
     
+    // reset uart
+    reset();
     baudrate = config->Baudrate;
     // Compute baud rate dividers
     mv = 15;
@@ -189,15 +165,27 @@ int32_t uart_set_configuration(UART_Configuration *config)
             break;
     }
 
+    if (config->FlowControl == UART_FLOW_CONTROL_RTS_CTS) {
+        LPC_IOCON->PIO0_17 |= 0x01;     // RTS
+        LPC_IOCON->PIO0_7  |= 0x01;     // CTS
+        // enable auto RTS and CTS
+        LPC_USART->MCR = (1 << 6) | (1 << 7);
+    } else {
+        LPC_IOCON->PIO0_17 &= ~0x01;     // RTS
+        LPC_IOCON->PIO0_7  &= ~0x01;     // CTS
+        // disable auto RTS and CTS
+        LPC_USART->MCR = (0 << 6) | (0 << 7);
+    }
 
     LPC_USART->LCR = (data_bits << 0)
                      | (stop_bits << 2)
                      | (parity << 3);
+                     
     // Set RTS/CTS    
 	if(gpio_get_config(PIN_CONFIG_DT01) == PIN_HIGH)
 	{
         LPC_USART->MCR = (1 << 7) | (1 << 6); // Enable RTS and CTS flow control
-	}    
+	}                     
     // Enable UART interrupt
     NVIC_EnableIRQ(UART_IRQn);
     return 1;
@@ -291,30 +279,14 @@ int32_t uart_get_configuration(UART_Configuration *config)
 
 int32_t uart_write_free(void)
 {
-    return BUFFER_SIZE - (write_buffer.cnt_in - write_buffer.cnt_out);
+    return circ_buf_count_free(&write_buffer);
 }
 
 int32_t uart_write_data(uint8_t *data, uint16_t size)
 {
     uint32_t cnt;
-    int32_t  len_in_buf;
 
-    if (size == 0) {
-        return 0;
-    }
-
-    cnt = 0;
-
-    while (size--) {
-        len_in_buf = write_buffer.cnt_in - write_buffer.cnt_out;
-
-        if (len_in_buf < BUFFER_SIZE) {
-            write_buffer.data[write_buffer.idx_in++] = *data++;
-            write_buffer.idx_in &= (BUFFER_SIZE - 1);
-            write_buffer.cnt_in++;
-            cnt++;
-        }
-    }
+    cnt = circ_buf_write(&write_buffer, data, size);
 
     // enable THRE interrupt
     LPC_USART->IER |= (1 << 1);
@@ -330,44 +302,25 @@ int32_t uart_write_data(uint8_t *data, uint16_t size)
 
 int32_t uart_read_data(uint8_t *data, uint16_t size)
 {
-    uint32_t cnt;
-
-    if (size == 0) {
-        return 0;
-    }
-
-    cnt = 0;
-
-    while (size--) {
-        if (read_buffer.cnt_in != read_buffer.cnt_out) {
-            *data++ = read_buffer.data[read_buffer.idx_out++];
-            read_buffer.idx_out &= (BUFFER_SIZE - 1);
-            read_buffer.cnt_out++;
-            cnt++;
-        }
-    }
-
-    //enable RX interrupt
-    LPC_USART->IER |= (1 << 0);  
-    
-    return cnt;
+    return circ_buf_read(&read_buffer, data, size);
 }
 
+void uart_enable_flow_control(bool enabled)
+{
+    // Flow control not implemented for this platform
+}
 
 void UART_IRQHandler(void)
 {
     uint32_t iir;
-    int32_t  len_in_buf;
     // read interrupt status
     iir = LPC_USART->IIR;
 
     // handle character to transmit
-    if (write_buffer.cnt_in != write_buffer.cnt_out) {
+    if (circ_buf_count_used(&write_buffer) > 0) {
         // if THR is empty
         if (LPC_USART->LSR & (1 << 5)) {
-            LPC_USART->THR = write_buffer.data[write_buffer.idx_out++];
-            write_buffer.idx_out &= (BUFFER_SIZE - 1);
-            write_buffer.cnt_out++;
+            LPC_USART->THR = circ_buf_pop(&write_buffer);
             tx_in_progress = 1;
         }
 
@@ -377,34 +330,51 @@ void UART_IRQHandler(void)
         LPC_USART->IER &= ~(1 << 1);
     }
 
-    //handle RLS interrupt
-    if((iir & 0x0E) == 0x06){ //RLS
-        //clear the FIFO.
-        while (LPC_USART->LSR & 0x01) {
-            LPC_USART->RBR;
-        }
-        LPC_USART->LSR;
-        return;
-    }
-    
     // handle received character
     if (((iir & 0x0E) == 0x04)  ||        // Rx interrupt (RDA)
-        ((iir & 0x0E) == 0x0C))  {        // Rx interrupt (CTI)
+            ((iir & 0x0E) == 0x0C))  {        // Rx interrupt (CTI)
         while (LPC_USART->LSR & 0x01) {
-            len_in_buf = read_buffer.cnt_in - read_buffer.cnt_out;
-            if (len_in_buf == BUFFER_SIZE) {            
-                //buffer full. keep data in FIFO, assert RTS=HIGH.
-                //disable the RX interrupt
-                LPC_USART->IER &= ~(0x01 << 0);
-                break;            
-            }
-            else{
-                read_buffer.data[read_buffer.idx_in++] = LPC_USART->RBR;
-                read_buffer.idx_in &= (BUFFER_SIZE - 1);
-                read_buffer.cnt_in++;
+            uint32_t free;
+            uint8_t data;
+            
+            data = LPC_USART->RBR;
+            free = circ_buf_count_free(&read_buffer);
+            if (free > RX_OVRF_MSG_SIZE) {
+                circ_buf_push(&read_buffer, data);
+            } else if (config_get_overflow_detect()) {
+                if (RX_OVRF_MSG_SIZE == free) {
+                    circ_buf_write(&read_buffer, (uint8_t*)RX_OVRF_MSG, RX_OVRF_MSG_SIZE);
+                } else {
+                    // Drop newest
+                }
+            } else {
+                // Drop oldest
+                circ_buf_pop(&read_buffer);
+                circ_buf_push(&read_buffer, data);
             }
         }
     }
 
     LPC_USART->LSR;
+}
+
+static int32_t reset(void)
+{
+    // Reset FIFOs
+    LPC_USART->FCR = 0x06;
+    baudrate  = 0;
+    dll       = 0;
+    tx_in_progress = 0;
+
+    circ_buf_init(&write_buffer, write_buffer_data, sizeof(write_buffer_data));
+    circ_buf_init(&read_buffer, read_buffer_data, sizeof(read_buffer_data));
+
+    // Ensure a clean start, no data in either TX or RX FIFO
+    while ((LPC_USART->LSR & ((1 << 5) | (1 << 6))) != ((1 << 5) | (1 << 6)));
+
+    while (LPC_USART->LSR & 0x01) {
+        LPC_USART->RBR;    // Dump data from RX FIFO
+    }
+
+    return 1;
 }

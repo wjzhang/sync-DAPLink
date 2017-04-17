@@ -151,7 +151,10 @@ BOOL USBD_MSC_CheckMedia(void)
             if ((USBD_MSC_CBW.bmFlags & 0x80) != 0) {
                 USBD_MSC_SetStallEP(usbd_msc_ep_bulkin | 0x80);
             } else {
-                USBD_MSC_SetStallEP(usbd_msc_ep_bulkout);
+                if (USBD_MSC_CSW.dDataResidue != BulkLen) {
+                    // Only stall if this isn't the last transfer
+                    USBD_MSC_SetStallEP(usbd_msc_ep_bulkout);
+                }
             }
         }
 
@@ -248,7 +251,7 @@ void USBD_MSC_MemoryWrite(void)
         BulkLen = 0;
     }
 
-    if (Offset + BulkLen - 1 > USBD_MSC_BlockSize) {
+    if (Offset + BulkLen > USBD_MSC_BlockSize) {
         // This write would have overflowed USBD_MSC_BlockBuf
         util_assert(0);
         return;
@@ -1077,8 +1080,13 @@ void USBD_MSC_BulkOut(void)
 
         case MSC_BS_CSW:
             // Previous transfer must be complete
-            // before the next transfer begins
-            util_assert(0);
+            // before the next transfer begins.
+            //
+            // If bulk out is stalled then just
+            // drop this packet and don't assert.
+            // This packet was left over from before
+            // the transfer aborted with a stall.
+            util_assert(USBD_EndPointHalt & (1 << usbd_msc_ep_bulkout));
             break;
 
         case MSC_BS_RESET:
