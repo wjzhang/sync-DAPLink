@@ -349,7 +349,7 @@ void usbd_msc_write_sect(uint32_t sector, uint8_t *buf, uint32_t num_of_sectors)
     }
 
     // indicate msc activity
-    main_blink_msc_led(MAIN_LED_OFF);
+    main_blink_hid_led(MAIN_LED_FLASH);
     vfs_write(sector, buf, num_of_sectors);
     if (TRASNFER_FINISHED == file_transfer_state.transfer_state) {
         return;

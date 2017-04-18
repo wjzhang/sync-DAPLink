@@ -161,7 +161,7 @@ static error_t target_flash_program_page(uint32_t addr, const uint8_t *buf, uint
     return ERROR_SUCCESS;
 }
 
-static error_t target_flash_erase_sector(uint32_t addr)
+static error_t target_flash_erase_sector(uint32_t sector)
 {
     uint32_t address = 0;
 

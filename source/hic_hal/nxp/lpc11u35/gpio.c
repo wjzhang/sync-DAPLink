@@ -211,7 +211,7 @@ uint8_t gpio_get_sw_reset(void)
         last_reset_forward_pressed = reset_forward_pressed;
     }
 
-    reset_pressed = reset_forward_pressed || (LPC_GPIO->PIN[PIN_RESET_IN_PORT] & PIN_RESET_IN ? 0 : 1);
+    reset_pressed = reset_forward_pressed ;
     return !reset_pressed;
 }
 

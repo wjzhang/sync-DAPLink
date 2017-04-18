@@ -29,7 +29,6 @@
 #include "board.h"
 #include "gpio.h"
 #include "uart.h"
-#include "serial.h"
 #include "tasks.h"
 #include "target_reset.h"
 #include "swd_host.h"
