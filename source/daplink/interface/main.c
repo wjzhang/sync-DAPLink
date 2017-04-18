@@ -446,18 +446,19 @@ __task void main_task(void)
                 gpio_set_hid_led(hid_led_value);
             }
 
-            if (cdc_led_usb_activity && ((cdc_led_state == MAIN_LED_FLASH) || (cdc_led_state == MAIN_LED_FLASH_PERMANENT))) {
+            if (cdc_led_identify_activity ) {
                 // Flash CDC LED ONCE
-                if (cdc_led_value) {
+                if (cdc_led_value == GPIO_LED_ON) {
                     cdc_led_value = GPIO_LED_OFF;
                 } else {
                     cdc_led_value = GPIO_LED_ON; // Turn on
-
-                    if (cdc_led_state == MAIN_LED_FLASH) {
-                        cdc_led_usb_activity = 0;
-                    }
                 }
-
+                if (cdc_led_identify_counter != 0) {
+                    cdc_led_identify_counter--;
+                } else {
+                    cdc_led_identify_activity = 0;
+                    cdc_led_value = GPIO_LED_OFF;                    
+                }
                 // Update hardware
                 gpio_set_cdc_led(cdc_led_value);
             }
